@@ -1,3 +1,5 @@
+package Client;
+
 import java.awt.EventQueue;
 
 import javax.swing.JFrame;
@@ -9,12 +11,22 @@ import javax.swing.JTextArea;
 import java.awt.BorderLayout;
 import javax.swing.border.LineBorder;
 import java.awt.SystemColor;
+import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.awt.event.ActionEvent;
 
 public class GUI {
 
 	private JFrame frame;
 	private JTextField userTextField;
 	private JTextField messageTextField;
+	private JTextArea chatTextArea;
 
 	/**
 	 * Launch the application.
@@ -66,6 +78,7 @@ public class GUI {
 		loginPanel.add(loginLabel);
 		
 		JButton loginButton = new JButton("Login");
+		loginButton.addActionListener(new LoginButtonListener());
 		loginButton.setBounds(259, 25, 89, 20);
 		loginPanel.add(loginButton);
 		
@@ -75,7 +88,7 @@ public class GUI {
 		frame.getContentPane().add(chatPanel);
 		chatPanel.setLayout(new BorderLayout(0, 0));
 		
-		JTextArea chatTextArea = new JTextArea();
+		chatTextArea = new JTextArea();
 		chatTextArea.setEditable(false);
 		chatPanel.add(chatTextArea);
 		
@@ -89,4 +102,31 @@ public class GUI {
 		textPanel.add(messageTextField);
 		messageTextField.setColumns(10);
 	}
+	
+	class LoginButtonListener implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			try {
+				Client client = new Client();
+				Socket socket = client.getSocket();
+				
+				PrintWriter pw = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
+				pw.println(userTextField.getText());
+				pw.flush();
+				
+				BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream(),"UTF-8"));
+				String answer = br.readLine();
+				chatTextArea.setText(answer);
+				socket.close();
+			} catch (UnknownHostException e1) {
+				e1.printStackTrace();
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			} 	
+		}
+		
+	}
+	
 }
+
