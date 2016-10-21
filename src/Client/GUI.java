@@ -120,7 +120,19 @@ public class GUI {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			
+			Client client;
+			try {
+				client = new Client();
+				Socket socket = client.getSocket();
+				String loginReq = "LOGIN:" + userTextField.getText() + ":" + passwordTextField.getText();
+				PrintWriter pw = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
+				pw.print(loginReq);
+				pw.flush();
+			} catch (UnknownHostException e1) {
+				e1.printStackTrace();
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
 		}
 
 	}
