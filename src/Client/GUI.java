@@ -124,10 +124,14 @@ public class GUI {
 			try {
 				client = new Client();
 				Socket socket = client.getSocket();
-				String loginReq = "LOGINk:" + userTextField.getText() + ":" + passwordTextField.getText();
+				String loginReq = "LOGIN:" + userTextField.getText() + ":" + passwordTextField.getText();
+				
 				PrintWriter pw = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
-				pw.print(loginReq);
+				pw.println(loginReq);
 				pw.flush();
+				
+				BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
+				String answer = br.readLine();
 			} catch (UnknownHostException e1) {
 				e1.printStackTrace();
 			} catch (IOException e1) {

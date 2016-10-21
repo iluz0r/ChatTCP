@@ -11,7 +11,7 @@ public class Client {
 	
 	public Client() throws UnknownHostException, IOException {
 		port = 1330;
-		socket = new Socket("localhost", port);
+		socket = new Socket("192.168.0.110", port);
 	}
 
 	public Socket getSocket() {
