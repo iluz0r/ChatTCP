@@ -124,7 +124,7 @@ public class GUI {
 			try {
 				client = new Client();
 				Socket socket = client.getSocket();
-				String loginReq = "LOGIN:" + userTextField.getText() + ":" + passwordTextField.getText();
+				String loginReq = "LOGINk:" + userTextField.getText() + ":" + passwordTextField.getText();
 				PrintWriter pw = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
 				pw.print(loginReq);
 				pw.flush();
