@@ -29,6 +29,7 @@ public class GUI {
 	private JTextField userTextField;
 	private JTextField messageTextField;
 	private JTextArea chatTextArea;
+	private JTextField passwordTextField;
 
 	/**
 	 * Launch the application.
@@ -71,18 +72,27 @@ public class GUI {
 		loginPanel.setLayout(null);
 
 		userTextField = new JTextField();
-		userTextField.setBounds(87, 25, 120, 20);
+		userTextField.setBounds(87, 9, 120, 20);
 		loginPanel.add(userTextField);
 		userTextField.setColumns(10);
 
 		JLabel loginLabel = new JLabel("Username:");
-		loginLabel.setBounds(10, 27, 67, 17);
+		loginLabel.setBounds(10, 11, 67, 17);
 		loginPanel.add(loginLabel);
 
 		JButton loginButton = new JButton("Login");
 		loginButton.addActionListener(new LoginButtonListener());
-		loginButton.setBounds(259, 25, 89, 20);
+		loginButton.setBounds(269, 24, 89, 20);
 		loginPanel.add(loginButton);
+		
+		JLabel passwordLabel = new JLabel("Password:");
+		passwordLabel.setBounds(10, 44, 67, 14);
+		loginPanel.add(passwordLabel);
+		
+		passwordTextField = new JTextField();
+		passwordTextField.setBounds(87, 41, 120, 20);
+		loginPanel.add(passwordTextField);
+		passwordTextField.setColumns(10);
 
 		JPanel chatPanel = new JPanel();
 		chatPanel.setBorder(new LineBorder(SystemColor.controlShadow));
@@ -110,6 +120,7 @@ public class GUI {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			
 		}
 
 	}
@@ -141,5 +152,4 @@ public class GUI {
 		}
 
 	}
-
 }
