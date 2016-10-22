@@ -23,9 +23,8 @@ public class Server implements Runnable {
 	public void run() {
 		try {
 			BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
-			String s = br.readLine();
+			String req = br.readLine();
 
-			String user = null, password = null;
 			String path = System.getProperty("user.dir") + "/src/Server/users.txt";
 			File f = new File(path);
 			f.createNewFile();
@@ -33,37 +32,10 @@ public class Server implements Runnable {
 			BufferedWriter usersWriter = new BufferedWriter(new FileWriter(path, true));			
 			PrintWriter pw = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
 
-			if (s.contains("LOGIN:")) {
-				System.out.println(s);
-				user = s.split(":")[1];
-				password = s.split(":")[2];
-
-				String psw  = getUserPassword(usersReader, user);
-
-				if (psw != null) {
-					if (!psw.equals(password))
-						pw.print("NACK:InvalidPassword");
-					else
-						pw.print("ACK:Authenticated");
-				} else
-					pw.print("ACK:LoginAsGuest");
-				pw.flush();
-			}
-			if (s.contains("REGISTER:")) {
-				user = s.split(":")[1];
-				password = s.split(":")[2];
-
-				String psw = getUserPassword(usersReader, user);
-
-				if (psw != null) 
-					pw.print("NACK:AlreadyExistingUser");
-				else {
-					usersWriter.write(user + ":" + password);
-					usersWriter.newLine();
-					pw.print("ACK:Registered");
-				}
-				pw.flush();
-			}
+			if (req.contains("LOGIN:")) 
+				processLoginReq(req, usersReader, pw);
+			else if (req.contains("REGISTER:")) 
+				processRegisterReq(req, usersReader, usersWriter, pw);
 			
 			usersWriter.close();
 		} catch (IOException e) {
@@ -75,6 +47,39 @@ public class Server implements Runnable {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	private void processLoginReq(String req, BufferedReader usersReader, PrintWriter pw) throws IOException {
+		System.out.println(req);
+		String user = req.split(":")[1];
+		String password = req.split(":")[2];
+
+		String psw  = getUserPassword(usersReader, user);
+
+		if (psw != null) {
+			if (!psw.equals(password))
+				pw.print("NACK:WrongPassword");
+			else
+				pw.print("ACK:Authenticated");
+		} else
+			pw.print("ACK:LoginAsGuest");
+		pw.flush();
+	}
+	
+	private void processRegisterReq(String req, BufferedReader usersReader, BufferedWriter usersWriter, PrintWriter pw) throws IOException {
+		String user = req.split(":")[1];
+		String password = req.split(":")[2];
+
+		String psw = getUserPassword(usersReader, user);
+
+		if (psw != null) 
+			pw.print("NACK:AlreadyExistingUser");
+		else {
+			usersWriter.write(user + ":" + password);
+			usersWriter.newLine();
+			pw.print("ACK:Registered");
+		}
+		pw.flush();
 	}
 
 	private String getUserPassword(BufferedReader usersReader, String user) throws IOException {
