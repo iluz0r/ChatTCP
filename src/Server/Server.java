@@ -37,6 +37,7 @@ public class Server implements Runnable {
 			PrintWriter pw = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
 
 			if (s.contains("LOGIN:")) {
+				System.out.println(s);
 				user = s.split(":")[1];
 				password = s.split(":")[2];
 

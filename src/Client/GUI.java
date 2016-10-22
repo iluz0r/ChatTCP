@@ -31,8 +31,6 @@ public class GUI {
 	private JTextArea chatTextArea;
 	private JTextField passwordTextField;
 	private JButton loginButton;
-	private String loginLogout="LOGIN:";
-
 
 	/**
 	 * Launch the application.
@@ -85,7 +83,7 @@ public class GUI {
 
 		loginButton = new JButton("Login");
 		loginButton.addActionListener(new LoginButtonListener());
-		loginButton.setBounds(267, 9, 89, 20);
+		loginButton.setBounds(242, 9, 89, 20);
 		loginPanel.add(loginButton);		
 		
 		JLabel passwordLabel = new JLabel("Password:");
@@ -99,16 +97,8 @@ public class GUI {
 		
 		JButton registerButton = new JButton("Register");
 		registerButton.addActionListener(new RegisterButtonListener());
-		registerButton.setBounds(267, 39, 89, 20);
+		registerButton.setBounds(242, 41, 89, 20);
 		loginPanel.add(registerButton);
-		
-		loginButton.setBounds(269, 24, 89, 20);
-		loginPanel.add(loginButton);
-		
-		passwordTextField = new JTextField();
-		passwordTextField.setBounds(87, 41, 120, 20);
-		loginPanel.add(passwordTextField);
-		passwordTextField.setColumns(10);
 
 		JPanel chatPanel = new JPanel();
 		chatPanel.setBorder(new LineBorder(SystemColor.controlShadow));
@@ -141,7 +131,7 @@ public class GUI {
 				client = new Client();
 				Socket socket = client.getSocket();
 				
-				String loginReq = loginLogout + userTextField.getText() + ":" + passwordTextField.getText();
+				String loginReq = "LOGIN:" + userTextField.getText() + ":" + passwordTextField.getText();
 				
 				PrintWriter pw = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
 				pw.println(loginReq);
