@@ -67,6 +67,7 @@ public class Server implements Runnable {
 	}
 	
 	private void processRegisterReq(String req, BufferedReader usersReader, BufferedWriter usersWriter, PrintWriter pw) throws IOException {
+		System.out.println(req);
 		String user = req.split(":")[1];
 		String password = req.split(":")[2];
 
