@@ -11,11 +11,7 @@ public class Client {
 	
 	public Client() throws UnknownHostException, IOException {
 		port = 1330;
-<<<<<<< HEAD
 		socket = new Socket("localhost", port);
-=======
-		socket = new Socket("192.168.0.110", port);
->>>>>>> branch 'master' of https://github.com/iluz0r/ChatTCP.git
 	}
 
 	public Socket getSocket() {
