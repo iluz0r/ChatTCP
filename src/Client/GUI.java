@@ -31,6 +31,7 @@ public class GUI {
 	private JTextArea chatTextArea;
 	private JTextField passwordTextField;
 	private JButton loginButton;
+	private String loginButtonState;
 
 	/**
 	 * Launch the application.
@@ -82,6 +83,7 @@ public class GUI {
 		loginPanel.add(loginLabel);
 
 		loginButton = new JButton("Login");
+		loginButtonState="LOGIN";
 		loginButton.addActionListener(new LoginButtonListener());
 		loginButton.setBounds(242, 9, 89, 20);
 		loginPanel.add(loginButton);		
@@ -131,15 +133,23 @@ public class GUI {
 				client = new Client();
 				Socket socket = client.getSocket();
 				
-				String loginReq = "LOGIN:" + userTextField.getText() + ":" + passwordTextField.getText();
+				String loginReq = loginButtonState+":" + userTextField.getText() + ":" + passwordTextField.getText();
 				
 				PrintWriter pw = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
+				System.out.println(loginReq);
 				pw.println(loginReq);
 				pw.flush();
 				
 				BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
 				String answer = br.readLine();
-				System.out.println(answer);				
+				System.out.println(answer);
+				if(answer.contains("ACK:Login")){
+					loginButtonState="LOGOUT";
+					loginButton.setText("Logout");
+				}else if(answer.contains("ACK:Logout")){
+					loginButtonState="LOGIN";
+					loginButton.setText("Login");
+				}
 			} catch (UnknownHostException e1) {
 				e1.printStackTrace();
 			} catch (IOException e1) {

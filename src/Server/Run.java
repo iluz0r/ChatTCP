@@ -16,7 +16,8 @@ public class Run {
 			Socket socket = serverSocket.accept();
 			System.out.println("Accepted connection from " + socket.getRemoteSocketAddress().toString());
 			Thread t = new Thread(new Server(socket));
-			t.start();		
+			t.start();
+			
 		}
 	}
 

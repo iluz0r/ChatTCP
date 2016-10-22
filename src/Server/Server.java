@@ -32,13 +32,17 @@ public class Server implements Runnable {
 			BufferedWriter usersWriter = new BufferedWriter(new FileWriter(path, true));			
 			PrintWriter pw = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
 
-			if (req.contains("LOGIN:")) 
+			if (req.contains("LOGIN:"))
 				processLoginReq(req, usersReader, pw);
 			else if (req.contains("REGISTER:")) 
 				processRegisterReq(req, usersReader, usersWriter, pw);
+			else if(req.contains("LOGOUT:"))
+				processLogoutReq(req, usersReader, pw);
 			
 			usersWriter.close();
 		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (InterruptedException e) {			
 			e.printStackTrace();
 		} finally {
 			try {
@@ -60,7 +64,7 @@ public class Server implements Runnable {
 			if (!psw.equals(password))
 				pw.print("NACK:WrongPassword");
 			else
-				pw.print("ACK:Authenticated");
+				pw.print("ACK:LoginAsAuthenticated");
 		} else
 			pw.print("ACK:LoginAsGuest");
 		pw.flush();
@@ -94,6 +98,18 @@ public class Server implements Runnable {
 		}
 
 		return password;
+	}
+	
+	public synchronized void processLogoutReq(String req, BufferedReader usersReader, PrintWriter pw) throws InterruptedException{
+		
+	/*	while(req.contains("LOGOUT")==false)			
+			wait();
+			
+			notify();
+	*/			
+			pw.print("ACK:Logout");
+			pw.flush();
+			
 	}
 
 }
