@@ -30,9 +30,12 @@ public class GUI {
 	private JTextField messageTextField;
 	private JTextArea chatTextArea;
 	private JTextField passwordTextField;
+<<<<<<< HEAD
 	private JButton loginButton;
 	
 	private String loginLogout="LOGIN:";
+=======
+>>>>>>> branch 'master' of https://github.com/iluz0r/ChatTCP.git
 
 	/**
 	 * Launch the application.
@@ -85,6 +88,7 @@ public class GUI {
 
 		loginButton = new JButton("Login");
 		loginButton.addActionListener(new LoginButtonListener());
+<<<<<<< HEAD
 		loginButton.setBounds(267, 9, 89, 20);
 		loginPanel.add(loginButton);		
 		
@@ -101,6 +105,19 @@ public class GUI {
 		registerButton.addActionListener(new RegisterButtonListener());
 		registerButton.setBounds(267, 39, 89, 20);
 		loginPanel.add(registerButton);
+=======
+		loginButton.setBounds(269, 24, 89, 20);
+		loginPanel.add(loginButton);
+		
+		JLabel passwordLabel = new JLabel("Password:");
+		passwordLabel.setBounds(10, 44, 67, 14);
+		loginPanel.add(passwordLabel);
+		
+		passwordTextField = new JTextField();
+		passwordTextField.setBounds(87, 41, 120, 20);
+		loginPanel.add(passwordTextField);
+		passwordTextField.setColumns(10);
+>>>>>>> branch 'master' of https://github.com/iluz0r/ChatTCP.git
 
 		JPanel chatPanel = new JPanel();
 		chatPanel.setBorder(new LineBorder(SystemColor.controlShadow));
@@ -132,6 +149,7 @@ public class GUI {
 			try {
 				client = new Client();
 				Socket socket = client.getSocket();
+<<<<<<< HEAD
 				
 				String loginReq = loginLogout + userTextField.getText() + ":" + passwordTextField.getText();
 				
@@ -169,6 +187,16 @@ public class GUI {
 				BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
 				String answer = br.readLine();
 				System.out.println(answer);
+=======
+				String loginReq = "LOGIN:" + userTextField.getText() + ":" + passwordTextField.getText();
+				
+				PrintWriter pw = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
+				pw.println(loginReq);
+				pw.flush();
+				
+				BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
+				String answer = br.readLine();
+>>>>>>> branch 'master' of https://github.com/iluz0r/ChatTCP.git
 			} catch (UnknownHostException e1) {
 				e1.printStackTrace();
 			} catch (IOException e1) {

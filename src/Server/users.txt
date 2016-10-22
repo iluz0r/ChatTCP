@@ -1,1 +1,6 @@
+<<<<<<< HEAD
 iluz0r:abcde
+=======
+fslanga:inchesensofslanga2:inchesenso2falanga:nchesenso
+falanga2:nchesenso2
+>>>>>>> branch 'master' of https://github.com/iluz0r/ChatTCP.git
