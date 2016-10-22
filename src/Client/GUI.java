@@ -29,6 +29,10 @@ public class GUI {
 	private JTextField userTextField;
 	private JTextField messageTextField;
 	private JTextArea chatTextArea;
+	private JTextField passwordTextField;
+	private JButton loginButton;
+	
+	private String loginLogout="LOGIN:";
 
 	/**
 	 * Launch the application.
@@ -71,18 +75,32 @@ public class GUI {
 		loginPanel.setLayout(null);
 
 		userTextField = new JTextField();
-		userTextField.setBounds(87, 25, 120, 20);
+		userTextField.setBounds(87, 9, 120, 20);
 		loginPanel.add(userTextField);
 		userTextField.setColumns(10);
 
 		JLabel loginLabel = new JLabel("Username:");
-		loginLabel.setBounds(10, 27, 67, 17);
+		loginLabel.setBounds(10, 11, 67, 17);
 		loginPanel.add(loginLabel);
 
-		JButton loginButton = new JButton("Login");
+		loginButton = new JButton("Login");
 		loginButton.addActionListener(new LoginButtonListener());
-		loginButton.setBounds(259, 25, 89, 20);
-		loginPanel.add(loginButton);
+		loginButton.setBounds(267, 9, 89, 20);
+		loginPanel.add(loginButton);		
+		
+		JLabel passwordLabel = new JLabel("Password:");
+		passwordLabel.setBounds(10, 44, 67, 14);
+		loginPanel.add(passwordLabel);
+		
+		passwordTextField = new JTextField();
+		passwordTextField.setBounds(87, 41, 120, 20);
+		loginPanel.add(passwordTextField);
+		passwordTextField.setColumns(10);
+		
+		JButton registerButton = new JButton("Register");
+		registerButton.addActionListener(new RegisterButtonListener());
+		registerButton.setBounds(267, 39, 89, 20);
+		loginPanel.add(registerButton);
 
 		JPanel chatPanel = new JPanel();
 		chatPanel.setBorder(new LineBorder(SystemColor.controlShadow));
@@ -110,6 +128,52 @@ public class GUI {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			Client client;
+			try {
+				client = new Client();
+				Socket socket = client.getSocket();
+				
+				String loginReq = loginLogout + userTextField.getText() + ":" + passwordTextField.getText();
+				
+				PrintWriter pw = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
+				pw.println(loginReq);
+				pw.flush();
+				
+				BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
+				String answer = br.readLine();
+				System.out.println(answer);				
+			} catch (UnknownHostException e1) {
+				e1.printStackTrace();
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+		}
+
+	}
+	
+	class RegisterButtonListener implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			Client client;
+			try {
+				client = new Client();
+				Socket socket = client.getSocket();
+				
+				String registerReq = "REGISTER:" + userTextField.getText() + ":" + passwordTextField.getText();
+				
+				PrintWriter pw = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
+				pw.println(registerReq);
+				pw.flush();
+				
+				BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
+				String answer = br.readLine();
+				System.out.println(answer);
+			} catch (UnknownHostException e1) {
+				e1.printStackTrace();
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
 		}
 
 	}
@@ -141,5 +205,4 @@ public class GUI {
 		}
 
 	}
-
 }
