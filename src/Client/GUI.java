@@ -5,7 +5,9 @@ import java.awt.EventQueue;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
 import javax.swing.JLabel;
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JTextArea;
 import java.awt.BorderLayout;
@@ -22,6 +24,8 @@ import java.net.UnknownHostException;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import javax.swing.JScrollPane;
+import javax.swing.JList;
 
 public class GUI {
 
@@ -32,6 +36,8 @@ public class GUI {
 	private JTextField passwordTextField;
 	private JButton loginButton;
 	private String loginButtonState;
+	private JList list;
+	private DefaultListModel listModel;
 
 	/**
 	 * Launch the application.
@@ -63,13 +69,13 @@ public class GUI {
 		frame = new JFrame();
 		frame.setTitle("ChatTCP");
 		frame.setResizable(false);
-		frame.setBounds(100, 100, 374, 260);
+		frame.setBounds(100, 100, 497, 260);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().setLayout(null);
 
 		JPanel loginPanel = new JPanel();
 		loginPanel.setBorder(new LineBorder(SystemColor.controlShadow));
-		loginPanel.setBounds(0, 0, 368, 69);
+		loginPanel.setBounds(0, 0, 491, 69);
 		frame.getContentPane().add(loginPanel);
 		loginPanel.setLayout(null);
 
@@ -101,6 +107,11 @@ public class GUI {
 		registerButton.addActionListener(new RegisterButtonListener());
 		registerButton.setBounds(242, 41, 89, 20);
 		loginPanel.add(registerButton);
+		
+		JButton btnList = new JButton("List");
+		btnList.addActionListener(new ListButtonListener());
+		btnList.setBounds(382, 9, 97, 23);
+		loginPanel.add(btnList);		
 
 		JPanel chatPanel = new JPanel();
 		chatPanel.setBorder(new LineBorder(SystemColor.controlShadow));
@@ -122,6 +133,20 @@ public class GUI {
 		messageTextField.addKeyListener(new SendTextKeyListener());
 		textPanel.add(messageTextField);
 		messageTextField.setColumns(10);
+		
+		JScrollPane scrollPane = new JScrollPane();
+		scrollPane.setBounds(369, 68, 122, 164);
+		frame.getContentPane().add(scrollPane);
+		
+		listModel = new DefaultListModel();		
+		//list = new JList<String>(listModel);
+		list = new JList(listModel);
+		list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        list.setSelectedIndex(0);
+        //list.addListSelectionListener(this);
+        list.setVisibleRowCount(5);        
+		scrollPane.setViewportView(list);
+		
 	}
 
 	class LoginButtonListener implements ActionListener {
@@ -186,6 +211,44 @@ public class GUI {
 
 	}
 
+	class ListButtonListener implements ActionListener {
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			Client client;
+			try {
+				client = new Client();
+				Socket socket = client.getSocket();
+				
+				String listReq = "LIST:";
+				String[] user=null;
+				
+				PrintWriter pw = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
+				pw.println(listReq);
+				pw.flush();
+				
+				BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
+				String answer = br.readLine();
+				
+				listModel.clear();
+												
+				user=answer.split(":");
+				
+				for(int i=0 ; i<user.length; i++)
+					listModel.addElement(user[i]);								
+				
+				System.out.println("Ho questo numero di elementi: "+user.length);
+				System.out.println(answer);
+			} catch (UnknownHostException e1) {
+				e1.printStackTrace();
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+		}
+
+	}
+	
 	class SendTextKeyListener extends KeyAdapter {
 
 		@Override

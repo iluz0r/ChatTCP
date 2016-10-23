@@ -20,7 +20,7 @@ public class Run {
 		 System.out.println(thread.getId()+ " "+ thread.getState());
 		 
 		while(true) {
-			System.out.println("Waiting connection...");
+			System.out.println("Waiting connection....");
 			// Una chiamata bloccante che aspetta fin quando non viene richiesta una connessione
 			Socket socket = serverSocket.accept();
 			System.out.println("Accepted connection from " + socket.getRemoteSocketAddress().toString());
