@@ -10,13 +10,17 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.HashSet;
 
 public class Server implements Runnable {
 
 	private Socket socket;
+	private HashSet<LoginUsers> listLoginUsers;
+	private LoginUsers userLogin;
 
-	public Server(Socket socket) {
+	public Server(Socket socket, HashSet<LoginUsers> listLoginUsers) {
 		this.socket = socket;
+		this.listLoginUsers = listLoginUsers;
 	}
 
 	@Override
@@ -25,24 +29,30 @@ public class Server implements Runnable {
 			BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
 			String req = br.readLine();
 
-			String path = System.getProperty("user.dir") + "/src/Server/users.txt";
-			File f = new File(path);
+			String pathUsers = System.getProperty("user.dir") + "/src/Server/users.txt";
+			String pathLogin = System.getProperty("user.dir") + "/src/Server/login.txt";
+			
+			File f = new File(pathUsers);
 			f.createNewFile();
-			BufferedReader usersReader = new BufferedReader(new FileReader(path));
-			BufferedWriter usersWriter = new BufferedWriter(new FileWriter(path, true));			
+			BufferedReader usersReader = new BufferedReader(new FileReader(pathUsers));
+			BufferedWriter usersWriter = new BufferedWriter(new FileWriter(pathUsers, true));
+			
+			BufferedReader usersLoginReader = new BufferedReader(new FileReader(pathLogin));
+			BufferedWriter usersLoginWriter = new BufferedWriter(new FileWriter(pathLogin, true));
+			
 			PrintWriter pw = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
 
 			if (req.contains("LOGIN:"))
-				processLoginReq(req, usersReader, pw);
+				processLoginReq(req, usersReader, listLoginUsers, pw);
 			else if (req.contains("REGISTER:")) 
 				processRegisterReq(req, usersReader, usersWriter, pw);
 			else if(req.contains("LOGOUT:"))
-				processLogoutReq(req, usersReader, pw);
+				processLogoutReq(req, listLoginUsers, pw);
+			else if(req.contains("LIST:"))
+				processListReq(listLoginUsers);
 			
 			usersWriter.close();
 		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (InterruptedException e) {			
 			e.printStackTrace();
 		} finally {
 			try {
@@ -53,7 +63,7 @@ public class Server implements Runnable {
 		}
 	}
 	
-	private void processLoginReq(String req, BufferedReader usersReader, PrintWriter pw) throws IOException {
+	private void processLoginReq(String req, BufferedReader usersReader, HashSet<LoginUsers> listLoginUser, PrintWriter pw) throws IOException {
 		System.out.println(req);
 		String user = req.split(":")[1];
 		String password = req.split(":")[2];
@@ -63,10 +73,14 @@ public class Server implements Runnable {
 		if (psw != null) {
 			if (!psw.equals(password))
 				pw.print("NACK:WrongPassword");
-			else
-				pw.print("ACK:LoginAsAuthenticated");
-		} else
+			else{
+				pw.print("ACK:LoginAsAuthenticated");				
+				listLoginUser.add(new LoginUsers(user));
+			}
+		} else {
 			pw.print("ACK:LoginAsGuest");
+			listLoginUser.add(new LoginUsers("Guest "+user));
+		}
 		pw.flush();
 	}
 	
@@ -100,16 +114,25 @@ public class Server implements Runnable {
 		return password;
 	}
 	
-	public synchronized void processLogoutReq(String req, BufferedReader usersReader, PrintWriter pw) throws InterruptedException{
+	public synchronized void processLogoutReq(String req, HashSet<LoginUsers> listLoginUser, PrintWriter pw) throws IOException{
 		
 	/*	while(req.contains("LOGOUT")==false)			
 			wait();
 			
 			notify();
-	*/			
+	*/
+		
+		if( (listLoginUser.remove(listLoginUser)) == true)
 			pw.print("ACK:Logout");
-			pw.flush();
+		else
+			pw.print("NACK:Logout");
+		
+		pw.flush();
 			
+	}
+	
+	private void processListReq(HashSet<LoginUsers> listLoginUser) {
+		
 	}
 
 }
