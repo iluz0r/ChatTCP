@@ -36,8 +36,8 @@ public class GUI {
 	private JTextField passwordTextField;
 	private JButton loginButton;
 	private String loginButtonState;
-	private JList list;
-	private DefaultListModel listModel;
+	private JList<String> list;
+	private DefaultListModel<String> listModel;
 
 	/**
 	 * Launch the application.
@@ -89,29 +89,29 @@ public class GUI {
 		loginPanel.add(loginLabel);
 
 		loginButton = new JButton("Login");
-		loginButtonState="LOGIN";
+		loginButtonState = "LOGIN";
 		loginButton.addActionListener(new LoginButtonListener());
 		loginButton.setBounds(242, 9, 89, 20);
-		loginPanel.add(loginButton);		
-		
+		loginPanel.add(loginButton);
+
 		JLabel passwordLabel = new JLabel("Password:");
 		passwordLabel.setBounds(10, 44, 67, 14);
 		loginPanel.add(passwordLabel);
-		
+
 		passwordTextField = new JTextField();
 		passwordTextField.setBounds(87, 41, 120, 20);
 		loginPanel.add(passwordTextField);
 		passwordTextField.setColumns(10);
-		
+
 		JButton registerButton = new JButton("Register");
 		registerButton.addActionListener(new RegisterButtonListener());
 		registerButton.setBounds(242, 41, 89, 20);
 		loginPanel.add(registerButton);
-		
+
 		JButton btnList = new JButton("List");
 		btnList.addActionListener(new ListButtonListener());
 		btnList.setBounds(382, 9, 97, 23);
-		loginPanel.add(btnList);		
+		loginPanel.add(btnList);
 
 		JPanel chatPanel = new JPanel();
 		chatPanel.setBorder(new LineBorder(SystemColor.controlShadow));
@@ -133,20 +133,17 @@ public class GUI {
 		messageTextField.addKeyListener(new SendTextKeyListener());
 		textPanel.add(messageTextField);
 		messageTextField.setColumns(10);
-		
+
 		JScrollPane scrollPane = new JScrollPane();
 		scrollPane.setBounds(369, 68, 122, 164);
 		frame.getContentPane().add(scrollPane);
-		
-		listModel = new DefaultListModel();		
-		//list = new JList<String>(listModel);
-		list = new JList(listModel);
+
+		listModel = new DefaultListModel<String>();
+		list = new JList<String>(listModel);
 		list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        list.setSelectedIndex(0);
-        //list.addListSelectionListener(this);
-        list.setVisibleRowCount(5);        
+		list.setSelectedIndex(0);
+		list.setVisibleRowCount(5);
 		scrollPane.setViewportView(list);
-		
 	}
 
 	class LoginButtonListener implements ActionListener {
@@ -157,22 +154,22 @@ public class GUI {
 			try {
 				client = new Client();
 				Socket socket = client.getSocket();
-				
-				String loginReq = loginButtonState+":" + userTextField.getText() + ":" + passwordTextField.getText();
-				
+
+				String loginReq = loginButtonState + ":" + userTextField.getText() + ":" + passwordTextField.getText();
+
 				PrintWriter pw = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
 				System.out.println(loginReq);
 				pw.println(loginReq);
 				pw.flush();
-				
+
 				BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
 				String answer = br.readLine();
 				System.out.println(answer);
-				if(answer.contains("ACK:Login")){
-					loginButtonState="LOGOUT";
+				if (answer.contains("ACK:Login")) {
+					loginButtonState = "LOGOUT";
 					loginButton.setText("Logout");
-				}else if(answer.contains("ACK:Logout")){
-					loginButtonState="LOGIN";
+				} else if (answer.contains("ACK:Logout")) {
+					loginButtonState = "LOGIN";
 					loginButton.setText("Login");
 				}
 			} catch (UnknownHostException e1) {
@@ -183,7 +180,7 @@ public class GUI {
 		}
 
 	}
-	
+
 	class RegisterButtonListener implements ActionListener {
 
 		@Override
@@ -192,13 +189,13 @@ public class GUI {
 			try {
 				client = new Client();
 				Socket socket = client.getSocket();
-				
+
 				String registerReq = "REGISTER:" + userTextField.getText() + ":" + passwordTextField.getText();
-				
+
 				PrintWriter pw = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
 				pw.println(registerReq);
 				pw.flush();
-				
+
 				BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
 				String answer = br.readLine();
 				System.out.println(answer);
@@ -213,32 +210,30 @@ public class GUI {
 
 	class ListButtonListener implements ActionListener {
 
-		@SuppressWarnings("unchecked")
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			Client client;
 			try {
 				client = new Client();
 				Socket socket = client.getSocket();
-				
+
 				String listReq = "LIST:";
-				String[] user=null;
-				
+				String[] user = null;
+
 				PrintWriter pw = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
 				pw.println(listReq);
 				pw.flush();
-				
+
 				BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
 				String answer = br.readLine();
-				
+
 				listModel.clear();
-												
-				user=answer.split(":");
-				
-				for(int i=0 ; i<user.length; i++)
-					listModel.addElement(user[i]);								
-				
-				System.out.println("Ho questo numero di elementi: "+user.length);
+				user = answer.split(":");
+
+				for (int i = 0; i < user.length; i++)
+					listModel.addElement(user[i]);
+
+				System.out.println("Ho questo numero di elementi: " + user.length);
 				System.out.println(answer);
 			} catch (UnknownHostException e1) {
 				e1.printStackTrace();
@@ -248,7 +243,7 @@ public class GUI {
 		}
 
 	}
-	
+
 	class SendTextKeyListener extends KeyAdapter {
 
 		@Override
