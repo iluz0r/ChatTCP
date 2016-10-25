@@ -32,7 +32,7 @@ public class ClientHandler implements Runnable {
 			String req;
 			Socket socket = user.getSocket();
 
-			while (socket.isConnected() && (req = br.readLine()) != null) {
+			while (!socket.isClosed() && (req = br.readLine()) != null) {
 				String pathUsers = System.getProperty("user.dir") + "/src/Server/users.txt";
 
 				File f = new File(pathUsers);
@@ -61,7 +61,6 @@ public class ClientHandler implements Runnable {
 	}
 
 	private void processLoginReq(String req, BufferedReader usersReader) throws IOException {
-		System.out.println(req);
 		String username = req.split(":")[1];
 		String password = "";
 
@@ -119,8 +118,7 @@ public class ClientHandler implements Runnable {
 		return password;
 	}
 
-	private void processLogoutReq(String req) throws IOException { // Da
-																	// rivedere
+	private void processLogoutReq(String req) throws IOException {
 		String s = "ACK:Logout";
 
 		onlineUsersList.remove(user);
@@ -135,14 +133,14 @@ public class ClientHandler implements Runnable {
 		String onlineUsers = "LIST:";
 		PrintWriter p;
 
-		for (User lu : onlineUsersList) {
-			onlineUsers += lu.getUsername() + ":";
+		for (User u : onlineUsersList) {
+			onlineUsers += u.getUsername() + ":";
 		}
 		onlineUsers = onlineUsers.substring(0, onlineUsers.length() - 1);
 		System.out.println(onlineUsers);
 
-		for (User lu : onlineUsersList) {
-			p = lu.getPrintWriter();
+		for (User u : onlineUsersList) {
+			p = u.getPrintWriter();
 			p.println(onlineUsers + "\n");
 			p.flush();
 		}
@@ -150,13 +148,10 @@ public class ClientHandler implements Runnable {
 
 	private void processMessage(String req) throws IOException {
 		PrintWriter p;
-		Socket socket;
-		String address;
-		int port;
 
-		for (User lu : onlineUsersList) {
-			if (lu.getUsername().contains("Goku")) {
-				p = lu.getPrintWriter();
+		for (User u : onlineUsersList) {
+			if (u.getUsername().contains("Goku")) {
+				p = u.getPrintWriter();
 				p.println("MESSAGE:" + req + "\n");
 				p.flush();
 

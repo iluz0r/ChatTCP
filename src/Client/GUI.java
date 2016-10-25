@@ -1,7 +1,6 @@
 package Client;
 
 import java.awt.EventQueue;
-
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -15,13 +14,7 @@ import javax.swing.border.LineBorder;
 import java.awt.SystemColor;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -30,12 +23,8 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-
 import javax.swing.JScrollPane;
 import javax.swing.JList;
-import javax.swing.JDesktopPane;
-import javax.swing.JInternalFrame;
 
 public class GUI {
 
@@ -49,11 +38,8 @@ public class GUI {
 	private JList<String> list;
 	private DefaultListModel<String> listModel;
 
-	private Thread t;
-	private BufferedReader br;
-	private PrintWriter pw;
-	private Socket socket;
 	private Client client;
+	private Thread serverListener;
 
 	/**
 	 * Launch the application.
@@ -73,15 +59,21 @@ public class GUI {
 
 	/**
 	 * Create the application.
+	 * 
+	 * @throws IOException
+	 * @throws UnknownHostException
 	 */
-	public GUI() {
+	public GUI() throws UnknownHostException, IOException {
 		initialize();
 	}
 
 	/**
 	 * Initialize the contents of the frame.
+	 * 
+	 * @throws IOException
+	 * @throws UnknownHostException
 	 */
-	private void initialize() {
+	private void initialize() throws UnknownHostException, IOException {
 		frame = new JFrame();
 		frame.setTitle("ChatTCP");
 		frame.setResizable(false);
@@ -159,241 +151,159 @@ public class GUI {
 		list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		list.setSelectedIndex(0);
 		list.setVisibleRowCount(5);
+		list.addMouseListener(new ListDoubleClickListener());
 		scrollPane.setViewportView(list);
 
-		list.addMouseListener(new MouseAdapter() {
-			public void mouseClicked(MouseEvent evt) {
-				JList<String> list = (JList) evt.getSource();
-				if (evt.getClickCount() == 2) {
+		initConnection();
+	}
+	
+	private void initConnection() throws UnknownHostException, IOException {
+		client = new Client();
 
-					// Double-click detected
-					int index = list.locationToIndex(evt.getPoint());
-					String user = listModel.getElementAt(index);
-					System.out.println("Utente: " + user);
-				}
-			}
-		});
-
-		try {
-			client = new Client();
-			socket = client.getSocket();
-			pw = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
-			br = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
-		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		thread();
+		serverListener = new Thread(new ServerListener());
+		serverListener.start();
 	}
 
-	private void thread() {
-
-		t = new Thread(new Runnable() {
-			public void run() {
-
-				synchronized (t) {
-					try {
-
-						String answer = "";
-						t.wait();
-
-						while ((answer = br.readLine()) != null) {
-							System.out.println("Il Thread funziona ed ha ricevuto " + answer);
-
-							String list[];
-							if (answer.contains("LIST:")) {
-								list = answer.split(":");
-								listModel.removeAllElements();
-								for (int i = 1; i < list.length; i++) {
-									System.out.println(list[i]);
-									listModel.addElement(list[i]);
-								}
-							} else if (answer.contains("MESSAGE:")) {
-
-								chatTextArea.append(answer.split(":")[1] + "\n");
-								messageTextField.setText("");
-							}
-						}
-
-					} catch (UnknownHostException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				}
-
-			}
-
-		});
-
-		t.setDaemon(true);
-		t.start();
-
-	}
-
-	class LoginButtonListener implements ActionListener {
+	private class ServerListener implements Runnable {
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
-			try {
-				String loginReq = loginButtonState + ":" + userTextField.getText() + ":" + passwordTextField.getText();
-
-				System.out.println(loginReq);
-				pw.println(loginReq);
-				pw.flush();
-
-				String answer = br.readLine();
-				System.out.println("Ho letto qui" + answer);
-				if (answer.contains("ACK:Login")) {
-					loginButtonState = "LOGOUT";
-					loginButton.setText("Logout");
-				} else if (answer.contains("ACK:Logout")) {
-					loginButtonState = "LOGIN";
-					loginButton.setText("Login");
-				}
-				synchronized (t) {
-					t.notify();
-				}
-			} catch (UnknownHostException e1) {
-				e1.printStackTrace();
-			} catch (IOException e1) {
-				e1.printStackTrace();
-			}
-		}
-
-	}
-
-	class RegisterButtonListener implements ActionListener {
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void run() {
 			try {
 				String answer;
-				String registerReq = "REGISTER:" + userTextField.getText() + ":" + passwordTextField.getText();
+				Socket socket = client.getSocket();
+				BufferedReader br = client.getBufferedReader();
 
-				pw.println(registerReq);
-				pw.flush();
+				while (!socket.isClosed() && (answer = br.readLine()) != null) {
+					System.out.println("Il server listener ha ricevuto " + answer);
 
-				System.out.println(br.readLine());
+					if (answer.contains("ACK:Login")) {
+						loginButtonState = "LOGOUT";
+						loginButton.setText("Logout");
+					} else if (answer.contains("ACK:Logout")) {
+						loginButtonState = "LOGIN";
+						loginButton.setText("Login");
+						
+						client.closeSocket();
+						Thread.currentThread().interrupt();
+					} else if (answer.contains("LIST:")) {
+						String[] list = answer.split(":");
 
-			} catch (UnknownHostException e1) {
-				e1.printStackTrace();
-			} catch (IOException e1) {
-				e1.printStackTrace();
+						listModel.removeAllElements();
+						for (int i = 1; i < list.length; i++) {
+							listModel.addElement(list[i]);
+						}
+					} else if (answer.contains("MESSAGE:")) {
+						chatTextArea.append(answer.split(":")[1] + "\n");
+						messageTextField.setText("");
+					}
+				}
+			} catch (UnknownHostException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		}
 
 	}
 
-	class ListButtonListener implements ActionListener {
+	private class LoginButtonListener implements ActionListener {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			String loginReq = loginButtonState + ":" + userTextField.getText() + ":" + passwordTextField.getText();
 
-			try {
-				String listReq = "LIST:";
-				String answer = "";
-				String[] user = null;
-
-				pw.println(listReq);
-				pw.flush();
-
-				listModel.removeAllElements();
-
-				answer = br.readLine();
-				System.out.println("readLine ha ricevuto " + answer);
-
-				user = answer.split(":");
-
-				System.out.println("Ci sono tot people loggati " + user.length);
-				for (int i = 1; i < user.length; i++)
-					listModel.addElement(user[i]);
-
-				System.out.println("Ho questo numero di elementi: " + user.length);
-				System.out.println(answer);
-
-			} catch (UnknownHostException e1) {
-				e1.printStackTrace();
-			} catch (IOException e1) {
-				e1.printStackTrace();
-			}
-		}
-
-	}
-
-	class SendTextKeyListener extends KeyAdapter {
-
-		@Override
-		public void keyReleased(KeyEvent e) {
-			if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+			if(client.getSocket().isClosed() && !serverListener.isAlive()) {
 				try {
-					Client client = new Client();
-					Socket socket = client.getSocket();
-
-					// PrintWriter pw = new PrintWriter(new
-					// OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
-					pw.println(messageTextField.getText());
-					System.out.println(messageTextField.getText());
-					pw.flush();
-
-					// BufferedReader br = new BufferedReader(new
-					// InputStreamReader(socket.getInputStream(), "UTF-8"));
-					// String answer = br.readLine();
-					// chatTextArea.append(answer + "\n");
-					// messageTextField.setText("");
-					// socket.close();
+					initConnection();
 				} catch (UnknownHostException e1) {
 					e1.printStackTrace();
 				} catch (IOException e1) {
 					e1.printStackTrace();
 				}
 			}
+			
+			PrintWriter pw = client.getPrintWriter();
+			pw.println(loginReq);
+			pw.flush();
 		}
 
 	}
 
-	class MouseEventListener implements MouseListener {
+	private class RegisterButtonListener implements ActionListener {
 
 		@Override
-		public void mouseClicked(MouseEvent e) {
-			if (e.getClickCount() == 2) {
-				PrivateMessage openGui = new PrivateMessage();
+		public void actionPerformed(ActionEvent e) {
+			String registerReq = "REGISTER:" + userTextField.getText() + ":" + passwordTextField.getText();
+
+			if(client.getSocket().isClosed() && !serverListener.isAlive()) {
+				try {
+					initConnection();
+				} catch (UnknownHostException e1) {
+					e1.printStackTrace();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
 			}
-
-		}
-
-		@Override
-		public void mouseEntered(MouseEvent e) {
-			// TODO Auto-generated method stub
-
-		}
-
-		@Override
-		public void mouseExited(MouseEvent e) {
-			// TODO Auto-generated method stub
-
-		}
-
-		@Override
-		public void mousePressed(MouseEvent e) {
-			// TODO Auto-generated method stub
-
-		}
-
-		@Override
-		public void mouseReleased(MouseEvent e) {
-			// TODO Auto-generated method stub
-
+			PrintWriter pw = client.getPrintWriter();
+			pw.println(registerReq);
+			pw.flush();
 		}
 
 	}
+
+	private class ListButtonListener implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			String listReq = "LIST:";
+
+			PrintWriter pw = client.getPrintWriter();
+			pw.println(listReq);
+			pw.flush();
+		}
+
+	}
+
+	private class ListDoubleClickListener extends MouseAdapter {
+
+		@Override
+		public void mouseClicked(MouseEvent evt) {
+			JList<?> list = (JList<?>) evt.getSource();
+
+			if (evt.getClickCount() == 2) {
+				int index = list.locationToIndex(evt.getPoint());
+				String user = listModel.getElementAt(index);
+				System.out.println("Utente: " + user);
+			}
+		}
+
+	}
+
+	private class SendTextKeyListener extends KeyAdapter {
+
+		@Override
+		public void keyReleased(KeyEvent e) {
+			if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+				// try {
+				System.out.println(messageTextField.getText());
+				PrintWriter pw = client.getPrintWriter();
+				pw.println(messageTextField.getText());
+				pw.flush();
+
+				// BufferedReader br = new BufferedReader(new
+				// InputStreamReader(socket.getInputStream(), "UTF-8"));
+				// String answer = br.readLine();
+				// chatTextArea.append(answer + "\n");
+				// messageTextField.setText("");
+				// socket.close();
+				// } catch (UnknownHostException e1) {
+				// e1.printStackTrace();
+				// } catch (IOException e1) {
+				// e1.printStackTrace();
+				// }
+			}
+		}
+
+	}
+
 }
