@@ -1,14 +1,11 @@
 package Client;
 
-import java.awt.EventQueue;
-
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import java.awt.BorderLayout;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JButton;
-import javax.swing.SwingConstants;
 
 public class PrivateMessage {
 
@@ -18,7 +15,7 @@ public class PrivateMessage {
 	/**
 	 * Launch the application.
 	 */
-	public static void main(String[] args) {
+	/*public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
@@ -29,7 +26,7 @@ public class PrivateMessage {
 				}
 			}
 		});
-	}
+	}*/
 
 	/**
 	 * Create the application.
