@@ -15,8 +15,12 @@ import javax.swing.border.LineBorder;
 import java.awt.SystemColor;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
@@ -24,8 +28,14 @@ import java.net.UnknownHostException;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+
 import javax.swing.JScrollPane;
 import javax.swing.JList;
+import javax.swing.JDesktopPane;
+import javax.swing.JInternalFrame;
 
 public class GUI {
 
@@ -38,6 +48,12 @@ public class GUI {
 	private String loginButtonState;
 	private JList<String> list;
 	private DefaultListModel<String> listModel;
+	
+	private Thread t;
+	private BufferedReader br;
+	private PrintWriter pw;
+	private Socket socket;
+	private Client client;
 
 	/**
 	 * Launch the application.
@@ -47,7 +63,7 @@ public class GUI {
 			public void run() {
 				try {
 					GUI window = new GUI();
-					window.frame.setVisible(true);
+					window.frame.setVisible(true);					
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -144,34 +160,112 @@ public class GUI {
 		list.setSelectedIndex(0);
 		list.setVisibleRowCount(5);
 		scrollPane.setViewportView(list);
+		
+		list.addMouseListener(new MouseAdapter() {
+		    public void mouseClicked(MouseEvent evt) {
+		        JList list = (JList)evt.getSource();
+		        if (evt.getClickCount() == 2) {
+
+		            // Double-click detected
+		            int index = list.locationToIndex(evt.getPoint());
+		            System.out.println("Utente: "+index);
+		        }
+		    }
+		});
+		
+		try {
+			client = new Client();
+			socket = client.getSocket();
+			pw = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));		
+			br = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
+		
+		thread();
+	}
+	
+	private void thread(){
+		
+	
+		
+		t = new Thread(new Runnable(){
+			public void run() {				
+				
+					synchronized(t){
+						try {
+							
+							String answer = "";
+							t.wait();
+							
+						    while ((answer = br.readLine())!=null) 
+						    {
+						    	System.out.println("Il Thread funziona ed ha ricevuto "+answer);
+
+								String list[];
+								if(answer.contains("LIST:")){									
+									list = answer.split(":");
+									listModel.removeAllElements();
+									for (int i = 1; i < list.length; i++){
+										System.out.println(list[i]);
+										listModel.addElement(list[i]);
+									}								
+								}else if(answer.contains("MESSAGE:")){
+									
+									chatTextArea.append(answer.split(":")[1] + "\n");
+									messageTextField.setText("");
+								}
+							}
+							
+						} catch (UnknownHostException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+						
+			}
+			
+			
+		});
+		
+		t.setDaemon(true);
+		t.start();
+		
 	}
 
 	class LoginButtonListener implements ActionListener {
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
-			Client client;
-			try {
-				client = new Client();
-				Socket socket = client.getSocket();
-
+		public void actionPerformed(ActionEvent e) {			
+			try {							
 				String loginReq = loginButtonState + ":" + userTextField.getText() + ":" + passwordTextField.getText();
 
-				PrintWriter pw = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
 				System.out.println(loginReq);
 				pw.println(loginReq);
 				pw.flush();
-
-				BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
-				String answer = br.readLine();
-				System.out.println(answer);
-				if (answer.contains("ACK:Login")) {
-					loginButtonState = "LOGOUT";
-					loginButton.setText("Logout");
-				} else if (answer.contains("ACK:Logout")) {
-					loginButtonState = "LOGIN";
-					loginButton.setText("Login");
-				}
+				
+					String answer = br.readLine();
+					System.out.println("Ho letto qui"+answer);
+					if (answer.contains("ACK:Login")) {
+						loginButtonState = "LOGOUT";
+						loginButton.setText("Logout");
+					} else if (answer.contains("ACK:Logout")) {
+						loginButtonState = "LOGIN";
+						loginButton.setText("Login");
+					}					
+					synchronized(t) {
+						t.notify();
+					}				
 			} catch (UnknownHostException e1) {
 				e1.printStackTrace();
 			} catch (IOException e1) {
@@ -184,21 +278,16 @@ public class GUI {
 	class RegisterButtonListener implements ActionListener {
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
-			Client client;
-			try {
-				client = new Client();
-				Socket socket = client.getSocket();
-
-				String registerReq = "REGISTER:" + userTextField.getText() + ":" + passwordTextField.getText();
-
-				PrintWriter pw = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
+		public void actionPerformed(ActionEvent e) {		
+			try {			
+				String answer;
+				String registerReq = "REGISTER:" + userTextField.getText() + ":" + passwordTextField.getText();								
+				
 				pw.println(registerReq);
 				pw.flush();
-
-				BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
-				String answer = br.readLine();
-				System.out.println(answer);
+				
+				System.out.println(br.readLine());
+				
 			} catch (UnknownHostException e1) {
 				e1.printStackTrace();
 			} catch (IOException e1) {
@@ -212,29 +301,30 @@ public class GUI {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			Client client;
-			try {
-				client = new Client();
-				Socket socket = client.getSocket();
-
+			
+			try {				
 				String listReq = "LIST:";
+				String answer="";
 				String[] user = null;
-
-				PrintWriter pw = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
+				
 				pw.println(listReq);
 				pw.flush();
 
-				BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
-				String answer = br.readLine();
-
-				listModel.clear();
-				user = answer.split(":");
-
-				for (int i = 0; i < user.length; i++)
-					listModel.addElement(user[i]);
-
-				System.out.println("Ho questo numero di elementi: " + user.length);
-				System.out.println(answer);
+				listModel.removeAllElements();
+				
+				answer = br.readLine();
+					System.out.println("readLine ha ricevuto "+answer);
+	
+					user = answer.split(":");
+					
+								 
+					System.out.println("Ci sono tot people loggati "+user.length);
+					 for (int i = 1; i < user.length; i++)
+						listModel.addElement(user[i]);
+	
+					System.out.println("Ho questo numero di elementi: " + user.length);
+					System.out.println(answer);										
+				
 			} catch (UnknownHostException e1) {
 				e1.printStackTrace();
 			} catch (IOException e1) {
@@ -253,15 +343,16 @@ public class GUI {
 					Client client = new Client();
 					Socket socket = client.getSocket();
 
-					PrintWriter pw = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
+					//PrintWriter pw = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
 					pw.println(messageTextField.getText());
+					System.out.println(messageTextField.getText());
 					pw.flush();
 
-					BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
-					String answer = br.readLine();
-					chatTextArea.append(answer + "\n");
-					messageTextField.setText("");
-					socket.close();
+					//BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
+					//String answer = br.readLine();
+					//chatTextArea.append(answer + "\n");
+					//messageTextField.setText("");
+					//socket.close();
 				} catch (UnknownHostException e1) {
 					e1.printStackTrace();
 				} catch (IOException e1) {
@@ -270,5 +361,42 @@ public class GUI {
 			}
 		}
 
+	}
+	
+	class MouseEventListener implements MouseListener{
+
+		@Override
+		public void mouseClicked(MouseEvent e) {
+			if(e.getClickCount()==2){
+	            PrivateMessage openGui = new PrivateMessage();
+	        }
+			
+		}
+
+		@Override
+		public void mouseEntered(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mouseExited(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mousePressed(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mouseReleased(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+	
 	}
 }
