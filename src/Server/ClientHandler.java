@@ -46,8 +46,6 @@ public class ClientHandler implements Runnable {
 					processRegisterReq(req, usersReader, usersWriter);
 				else if (req.contains("LOGOUT:"))
 					processLogoutReq(req);
-				else if (req.contains("LIST:"))
-					processListReq();
 				else {
 					processMessage(req);
 				}
@@ -84,12 +82,21 @@ public class ClientHandler implements Runnable {
 		}
 		pw.flush();
 
-		processListReq();
+		sendUsersList();
+	}
+
+	private void processLogoutReq(String req) throws IOException {
+		onlineUsersList.remove(user);
+
+		pw.println("ACK:Logout");
+		pw.flush();
+
+		sendUsersList();
+		user.closeSocket();
 	}
 
 	private void processRegisterReq(String req, BufferedReader usersReader, BufferedWriter usersWriter)
 			throws IOException {
-		System.out.println(req);
 		String user = req.split(":")[1];
 		String password = req.split(":")[2];
 
@@ -105,39 +112,15 @@ public class ClientHandler implements Runnable {
 		pw.flush();
 	}
 
-	private String getUserPassword(BufferedReader usersReader, String user) throws IOException {
-		String line;
-		String password = null;
-
-		while ((line = usersReader.readLine()) != null) {
-			String s = line.split(":")[0];
-			if (s.equals(user))
-				password = line.split(":")[1];
-		}
-
-		return password;
-	}
-
-	private void processLogoutReq(String req) throws IOException {
-		String s = "ACK:Logout";
-
-		onlineUsersList.remove(user);
-
-		pw.println(s + "\n");
-		pw.flush();
-
-		user.closeSocket();
-	}
-
-	private void processListReq() throws UnsupportedEncodingException, IOException {
+	private void sendUsersList() throws UnsupportedEncodingException, IOException {
 		String onlineUsers = "LIST:";
 		PrintWriter p;
 
 		for (User u : onlineUsersList) {
 			onlineUsers += u.getUsername() + ":";
 		}
+
 		onlineUsers = onlineUsers.substring(0, onlineUsers.length() - 1);
-		System.out.println(onlineUsers);
 
 		for (User u : onlineUsersList) {
 			p = u.getPrintWriter();
@@ -157,6 +140,19 @@ public class ClientHandler implements Runnable {
 
 			}
 		}
+	}
+
+	private String getUserPassword(BufferedReader usersReader, String user) throws IOException {
+		String line;
+		String password = null;
+
+		while ((line = usersReader.readLine()) != null) {
+			String s = line.split(":")[0];
+			if (s.equals(user))
+				password = line.split(":")[1];
+		}
+
+		return password;
 	}
 
 }

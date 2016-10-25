@@ -116,11 +116,6 @@ public class GUI {
 		registerButton.setBounds(242, 41, 89, 20);
 		loginPanel.add(registerButton);
 
-		JButton btnList = new JButton("List");
-		btnList.addActionListener(new ListButtonListener());
-		btnList.setBounds(382, 9, 97, 23);
-		loginPanel.add(btnList);
-
 		JPanel chatPanel = new JPanel();
 		chatPanel.setBorder(new LineBorder(SystemColor.controlShadow));
 		chatPanel.setBounds(0, 68, 368, 133);
@@ -156,7 +151,7 @@ public class GUI {
 
 		initConnection();
 	}
-	
+
 	private void initConnection() throws UnknownHostException, IOException {
 		client = new Client();
 
@@ -182,16 +177,14 @@ public class GUI {
 					} else if (answer.contains("ACK:Logout")) {
 						loginButtonState = "LOGIN";
 						loginButton.setText("Login");
-						
+
 						client.closeSocket();
-						Thread.currentThread().interrupt();
 					} else if (answer.contains("LIST:")) {
 						String[] list = answer.split(":");
 
 						listModel.removeAllElements();
-						for (int i = 1; i < list.length; i++) {
+						for (int i = 1; i < list.length; i++)
 							listModel.addElement(list[i]);
-						}
 					} else if (answer.contains("MESSAGE:")) {
 						chatTextArea.append(answer.split(":")[1] + "\n");
 						messageTextField.setText("");
@@ -212,7 +205,7 @@ public class GUI {
 		public void actionPerformed(ActionEvent e) {
 			String loginReq = loginButtonState + ":" + userTextField.getText() + ":" + passwordTextField.getText();
 
-			if(client.getSocket().isClosed() && !serverListener.isAlive()) {
+			if (client.getSocket().isClosed() && !serverListener.isAlive()) {
 				try {
 					initConnection();
 				} catch (UnknownHostException e1) {
@@ -221,7 +214,7 @@ public class GUI {
 					e1.printStackTrace();
 				}
 			}
-			
+
 			PrintWriter pw = client.getPrintWriter();
 			pw.println(loginReq);
 			pw.flush();
@@ -235,7 +228,7 @@ public class GUI {
 		public void actionPerformed(ActionEvent e) {
 			String registerReq = "REGISTER:" + userTextField.getText() + ":" + passwordTextField.getText();
 
-			if(client.getSocket().isClosed() && !serverListener.isAlive()) {
+			if (client.getSocket().isClosed() && !serverListener.isAlive()) {
 				try {
 					initConnection();
 				} catch (UnknownHostException e1) {
@@ -246,19 +239,6 @@ public class GUI {
 			}
 			PrintWriter pw = client.getPrintWriter();
 			pw.println(registerReq);
-			pw.flush();
-		}
-
-	}
-
-	private class ListButtonListener implements ActionListener {
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			String listReq = "LIST:";
-
-			PrintWriter pw = client.getPrintWriter();
-			pw.println(listReq);
 			pw.flush();
 		}
 

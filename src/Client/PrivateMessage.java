@@ -15,18 +15,12 @@ public class PrivateMessage {
 	/**
 	 * Launch the application.
 	 */
-	/*public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					PrivateMessage window = new PrivateMessage();
-					window.frame.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}*/
+	/*
+	 * public static void main(String[] args) { EventQueue.invokeLater(new
+	 * Runnable() { public void run() { try { PrivateMessage window = new
+	 * PrivateMessage(); window.frame.setVisible(true); } catch (Exception e) {
+	 * e.printStackTrace(); } } }); }
+	 */
 
 	/**
 	 * Create the application.
@@ -43,26 +37,26 @@ public class PrivateMessage {
 		frame.setBounds(100, 100, 450, 300);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().setLayout(null);
-		
+
 		JPanel panel = new JPanel();
 		panel.setBounds(2, 4, 428, 214);
 		frame.getContentPane().add(panel);
 		panel.setLayout(new BorderLayout(0, 0));
-		
+
 		JTextArea textArea = new JTextArea();
 		textArea.setRows(12);
 		panel.add(textArea);
-		
+
 		JPanel panel_1 = new JPanel();
 		panel_1.setBounds(0, 222, 432, 25);
 		frame.getContentPane().add(panel_1);
 		panel_1.setLayout(null);
-		
+
 		textField = new JTextField();
 		textField.setBounds(12, 0, 314, 25);
 		panel_1.add(textField);
 		textField.setColumns(28);
-		
+
 		JButton btnNewButton = new JButton("Invia");
 		btnNewButton.setBounds(330, 0, 97, 25);
 		panel_1.add(btnNewButton);

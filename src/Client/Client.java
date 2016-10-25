@@ -37,7 +37,7 @@ public class Client {
 	public PrintWriter getPrintWriter() {
 		return pw;
 	}
-	
+
 	public void closeSocket() throws IOException {
 		socket.close();
 	}
