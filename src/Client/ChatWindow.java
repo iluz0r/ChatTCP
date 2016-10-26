@@ -217,21 +217,23 @@ public class ChatWindow {
 						String sender = answer.split(":")[1];
 						String receiver = answer.split(":")[2];
 						String message = answer.split(":")[3];
-						String temp;
+						String s, r;
 						int flagWindow = 0;
-						
-						// Controlla se la finestra era stata già aperta e poi chiusa
+
+						// Controlla se la finestra era stata già aperta e poi
+						// chiusa
 						for (PrivateChatWindow window : privateChatWindowList) {
-							System.out.println("Sono qui!");
-							temp = window.getReceiver();
-							if (temp.contains(sender) || temp.contains(receiver)) {
+							System.out.println("Finestra già esistente");
+							r = window.getReceiver();
+							s = window.getSender();
+							if (s.equals(receiver) && r.equals(sender)) {
 								window.setTextArea(sender, message);
 								flagWindow = 1;
 								if (window.getFrame().isVisible() == false)
 									window.getFrame().setVisible(true);
 							}
 						}
-						
+
 						// Se la finestra non è mai stata creata, la crea
 						if (flagWindow == 0) {
 							System.out.println("Creo per la prima volta la finestra");
@@ -330,10 +332,22 @@ public class ChatWindow {
 				int index = list.locationToIndex(evt.getPoint());
 				String receiver = listModel.getElementAt(index);
 				String sender = userTextField.getText();
-				PrintWriter pw = clientConn.getPrintWriter();
+				boolean found = false;
+				
+				for(PrivateChatWindow window : privateChatWindowList) {
+					if(window.getSender().equals(sender) && window.getReceiver().equals(receiver)) {
+						if (window.getFrame().isVisible() == false)
+							window.getFrame().setVisible(true);
+						found = true;
+					}
+				}
+				
+				if(!found){
+					PrintWriter pw = clientConn.getPrintWriter();
 
-				PrivateChatWindow privateMessage = new PrivateChatWindow(sender, receiver, pw);
-				privateChatWindowList.add(privateMessage);
+					PrivateChatWindow privateMessage = new PrivateChatWindow(sender, receiver, pw);
+					privateChatWindowList.add(privateMessage);
+				}
 			}
 		}
 
