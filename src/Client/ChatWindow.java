@@ -160,12 +160,10 @@ public class ChatWindow {
 		scrollPane.setViewportView(list);
 
 		privateChatWindowList = new ArrayList<>();
-		initConnection();
 	}
 
 	private void initConnection() throws UnknownHostException, IOException {
 		clientConn = new ClientConnection();
-
 		serverListener = new Thread(new ServerListener());
 		serverListener.start();
 	}
@@ -222,7 +220,6 @@ public class ChatWindow {
 						// Controlla se la finestra era stata già aperta e poi
 						// chiusa
 						for (PrivateChatWindow window : privateChatWindowList) {
-							System.out.println("Finestra già esistente");
 							r = window.getReceiver();
 							s = window.getSender();
 							if (s.equals(receiver) && r.equals(sender)) {
@@ -235,7 +232,6 @@ public class ChatWindow {
 
 						// Se la finestra non è mai stata creata, la crea
 						if (flagWindow == 0) {
-							System.out.println("Creo per la prima volta la finestra");
 							PrivateChatWindow pm = new PrivateChatWindow(receiver, sender, clientConn.getPrintWriter());
 							privateChatWindowList.add(pm);
 							pm.setTextArea(sender, message);
@@ -260,7 +256,8 @@ public class ChatWindow {
 			if (!username.equals("")) {
 				String loginReq = loginButtonState + ":" + username + ":" + passwordTextField.getText();
 
-				if (clientConn.isClosed() && !serverListener.isAlive()) {
+				if ((clientConn == null || clientConn.isClosed())
+						&& (serverListener == null || !serverListener.isAlive())) {
 					try {
 						initConnection();
 					} catch (UnknownHostException e1) {
@@ -288,7 +285,8 @@ public class ChatWindow {
 			if (!username.equals("") && !password.equals("")) {
 				String registerReq = "REGISTER:" + username + ":" + password;
 
-				if (clientConn.isClosed() && !serverListener.isAlive()) {
+				if ((clientConn == null || clientConn.isClosed())
+						&& (serverListener == null || !serverListener.isAlive())) {
 					try {
 						initConnection();
 					} catch (UnknownHostException e1) {
@@ -342,7 +340,6 @@ public class ChatWindow {
 						found = true;
 					}
 				}
-
 				if (!found) {
 					PrintWriter pw = clientConn.getPrintWriter();
 
