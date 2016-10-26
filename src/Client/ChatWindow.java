@@ -11,7 +11,6 @@ import javax.swing.JButton;
 import javax.swing.JTextArea;
 import java.awt.BorderLayout;
 import javax.swing.border.LineBorder;
-import java.awt.SystemColor;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -23,13 +22,14 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-
 import javax.swing.JScrollPane;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.Color;
 
-public class GUI {
+public class ChatWindow {
 
 	private JFrame frame;
 	private JTextField userTextField;
@@ -43,7 +43,7 @@ public class GUI {
 
 	private ClientConnection clientConn;
 	private Thread serverListener;
-	private ArrayList<PrivateMessage> listPrivateUsers;
+	private ArrayList<PrivateChatWindow> listPrivateUsers;
 
 	/**
 	 * Launch the application.
@@ -52,7 +52,7 @@ public class GUI {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					GUI window = new GUI();
+					ChatWindow window = new ChatWindow();
 					window.frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -67,7 +67,7 @@ public class GUI {
 	 * @throws IOException
 	 * @throws UnknownHostException
 	 */
-	public GUI() throws UnknownHostException, IOException {
+	public ChatWindow() throws UnknownHostException, IOException {
 		initialize();
 	}
 
@@ -81,12 +81,12 @@ public class GUI {
 		frame = new JFrame();
 		frame.setTitle("ChatTCP");
 		frame.setResizable(false);
-		frame.setBounds(100, 100, 497, 260);
+		frame.setBounds(100, 100, 497, 283);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().setLayout(null);
+		frame.addWindowListener(new CloseWindowListener());
 
 		JPanel loginPanel = new JPanel();
-		loginPanel.setBorder(new LineBorder(SystemColor.controlShadow));
 		loginPanel.setBounds(0, 0, 491, 69);
 		frame.getContentPane().add(loginPanel);
 		loginPanel.setLayout(null);
@@ -121,8 +121,8 @@ public class GUI {
 		loginPanel.add(registerButton);
 
 		JPanel chatPanel = new JPanel();
-		chatPanel.setBorder(new LineBorder(SystemColor.controlShadow));
-		chatPanel.setBounds(0, 68, 368, 133);
+		chatPanel.setBorder(new LineBorder(Color.LIGHT_GRAY));
+		chatPanel.setBounds(0, 70, 368, 156);
 		frame.getContentPane().add(chatPanel);
 		chatPanel.setLayout(new BorderLayout(0, 0));
 
@@ -131,8 +131,9 @@ public class GUI {
 		chatPanel.add(chatTextArea);
 
 		JPanel textPanel = new JPanel();
-		textPanel.setBorder(new LineBorder(SystemColor.controlShadow));
-		textPanel.setBounds(0, 202, 368, 30);
+		textPanel.setBorder(new LineBorder(Color.LIGHT_GRAY));
+		textPanel.setForeground(Color.BLACK);
+		textPanel.setBounds(0, 225, 368, 30);
 		frame.getContentPane().add(textPanel);
 		textPanel.setLayout(new BorderLayout(0, 0));
 
@@ -141,20 +142,24 @@ public class GUI {
 		textPanel.add(messageTextField);
 		messageTextField.setColumns(10);
 
-		JScrollPane scrollPane = new JScrollPane();
-		scrollPane.setBounds(369, 68, 122, 164);
-		frame.getContentPane().add(scrollPane);
-
 		listModel = new DefaultListModel<String>();
-		list = new JList<String>(listModel);
-		list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		list.setSelectedIndex(0);
-		list.setVisibleRowCount(5);
-		list.addMouseListener(new ListDoubleClickListener());
-		scrollPane.setViewportView(list);
 		
-		list.addMouseListener(new MouseEventListener());
-		listPrivateUsers=new ArrayList<PrivateMessage>();
+		JPanel listPanel = new JPanel();
+		listPanel.setBorder(new LineBorder(Color.LIGHT_GRAY));
+		listPanel.setBounds(368, 70, 123, 185);
+		frame.getContentPane().add(listPanel);
+						listPanel.setLayout(new BorderLayout(0, 0));
+				
+						JScrollPane scrollPane = new JScrollPane();
+						listPanel.add(scrollPane);
+						list = new JList<String>(listModel);
+						list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+						list.setSelectedIndex(0);
+						list.setVisibleRowCount(5);
+						list.addMouseListener(new ListDoubleClickListener());
+						scrollPane.setViewportView(list);
+
+		listPrivateUsers = new ArrayList<PrivateChatWindow>();
 
 		initConnection();
 	}
@@ -205,30 +210,31 @@ public class GUI {
 						for (int i = 1; i < list.length; i++)
 							listModel.addElement(list[i]);
 					} else if (answer.startsWith("MESSAGE:")) {
-						String from=answer.split(":")[1];
-						String message=answer.split(":")[2];
-						chatTextArea.append(from + ":" + message +"\n");
-						messageTextField.setText("");
-					} else if (answer.contains("PRIVATEFROM:")){
-						String from=answer.split(":")[1];
-						String to=answer.split(":")[2];								
-						String message=answer.split(":")[3];
+						String sender = answer.split(":")[1];
+						String message = answer.split(":")[2];
+						chatTextArea.append(sender + ": " + message + "\n");
+					} else if (answer.contains("PRIVATEFROM:")) {
+						String from = answer.split(":")[1];
+						String to = answer.split(":")[2];
+						String message = answer.split(":")[3];
 						String temp;
 						System.out.println(answer);
-						System.out.println("Ci sono "+listPrivateUsers.size()+" elementi");
-						int flagWindow=0;
-						for (PrivateMessage pm : listPrivateUsers) {
-							temp=pm.getTo();
-							System.out.println("Cosa c'è in questo piripicchio "+temp);
-							if (temp.contains(from)) {
-								System.out.println("Messaggio da "+from);
+						System.out.println("Ci sono " + listPrivateUsers.size() + " elementi");
+						int flagWindow = 0;
+						for (PrivateChatWindow pm : listPrivateUsers) {
+							temp = pm.getTo();
+							System.out.println("Cosa c'è in questo piripicchio " + temp);
+							if (temp.contains(from) || temp.contains(to)) {
+								System.out.println("Messaggio da " + from);
 								pm.setTextArea(from, message);
-								flagWindow=1;
+								flagWindow = 1;
+								if (pm.getFrame().isVisible() == false)
+									pm.getFrame().setVisible(true);
 							}
 						}
-						System.out.println("flagWindow vale "+flagWindow);
-						if(flagWindow==0){
-							PrivateMessage pm = new PrivateMessage(from,to,clientConn.getPrintWriter());
+						System.out.println("flagWindow vale " + flagWindow);
+						if (flagWindow == 0) {
+							PrivateChatWindow pm = new PrivateChatWindow(from, to, clientConn.getPrintWriter());
 							listPrivateUsers.add(pm);
 							pm.setTextArea(from, message);
 						}
@@ -261,13 +267,11 @@ public class GUI {
 						e1.printStackTrace();
 					}
 				}
-
 				PrintWriter pw = clientConn.getPrintWriter();
 				pw.println(loginReq);
 				pw.flush();
-			} else {
+			} else
 				JOptionPane.showMessageDialog(frame, "Username mancante", "Messaggio", JOptionPane.INFORMATION_MESSAGE);
-			}
 		}
 
 	}
@@ -294,10 +298,9 @@ public class GUI {
 				PrintWriter pw = clientConn.getPrintWriter();
 				pw.println(registerReq);
 				pw.flush();
-			} else {
+			} else
 				JOptionPane.showMessageDialog(frame, "Username/Password mancante/i", "Messaggio",
 						JOptionPane.INFORMATION_MESSAGE);
-			}
 		}
 
 	}
@@ -310,73 +313,41 @@ public class GUI {
 
 			if (evt.getClickCount() == 2) {
 				int index = list.locationToIndex(evt.getPoint());
-				String user = listModel.getElementAt(index);
-				System.out.println("Utente: " + user);
+				String to = listModel.getElementAt(index);
+				String from = userTextField.getText();
+				PrintWriter pw = clientConn.getPrintWriter();
+
+				PrivateChatWindow privateMessage = new PrivateChatWindow(from, to, pw);
+				listPrivateUsers.add(privateMessage);
 			}
 		}
 
 	}
 
-	class SendTextKeyListener extends KeyAdapter {
+	private class SendTextKeyListener extends KeyAdapter {
 
 		@Override
 		public void keyReleased(KeyEvent e) {
 			if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-				
 				PrintWriter pw = clientConn.getPrintWriter();
-				pw.println("MESSAGE:"+userTextField.getText()+":"+messageTextField.getText());
-				System.out.println("MESSAGE:"+userTextField.getText()+":"+messageTextField.getText());
+				pw.println("MESSAGE:" + userTextField.getText() + ":" + messageTextField.getText());
 				pw.flush();
-
+				messageTextField.setText("");
 			}
 		}
 
 	}
 
-	class MouseEventListener implements MouseListener {
+	private class CloseWindowListener extends WindowAdapter {
 
 		@Override
-		public void mouseClicked(MouseEvent evt) {
-			JList<String> list = (JList) evt.getSource();
-			if (evt.getClickCount() == 2) {
-
-				// Double-click detected
-								
-				int index = list.locationToIndex(evt.getPoint());
-				String to = listModel.getElementAt(index);
-				String from = userTextField.getText();
+		public void windowClosing(WindowEvent e) {
+			if (loginButtonState.equals("LOGOUT")) {
 				PrintWriter pw = clientConn.getPrintWriter();
-				
-				PrivateMessage privateMessage = new PrivateMessage(from, to, pw);
-				listPrivateUsers.add(privateMessage);
-				
+				pw.println(loginButtonState + ":" + userTextField.getText() + ":" + passwordTextField.getText());
+				pw.flush();
 			}
 		}
 
-		@Override
-		public void mouseEntered(MouseEvent e) {
-			// TODO Auto-generated method stub
-
-		}
-
-		@Override
-		public void mouseExited(MouseEvent e) {
-			// TODO Auto-generated method stub
-
-		}
-
-		@Override
-		public void mousePressed(MouseEvent e) {
-			// TODO Auto-generated method stub
-
-		}
-
-		@Override
-		public void mouseReleased(MouseEvent e) {
-			// TODO Auto-generated method stub
-
-		}
-
 	}
-
 }

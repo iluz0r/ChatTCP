@@ -40,6 +40,10 @@ public class User {
 	public PrintWriter getPrintWriter() {
 		return pw;
 	}
+	
+	public boolean isClosed() {
+		return socket.isClosed();
+	}
 
 	public void closeSocket() throws IOException {
 		socket.close();

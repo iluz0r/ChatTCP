@@ -30,9 +30,8 @@ public class ClientHandler implements Runnable {
 	public void run() {
 		try {
 			String req;
-			Socket socket = user.getSocket();
 
-			while (!socket.isClosed() && (req = br.readLine()) != null) {
+			while (!user.isClosed() && (req = br.readLine()) != null) {
 				String pathUsers = System.getProperty("user.dir") + "/src/Server/users.txt";
 
 				File f = new File(pathUsers);
@@ -48,7 +47,7 @@ public class ClientHandler implements Runnable {
 					processLogoutReq(req);
 				else if (req.contains("PRIVATETO:"))
 					processPrivateMessage(req);
-				else if (req.contains("MESSAGE")){
+				else if (req.contains("MESSAGE")) {
 					processMessage(req);
 				}
 
@@ -86,13 +85,13 @@ public class ClientHandler implements Runnable {
 				resp = "NACK:NotExistingUser";
 		}
 
+		pw.println(resp);
+		pw.flush();
 		if (resp.startsWith("ACK:")) {
 			user.setUsername(username);
 			onlineUsersList.add(user);
 			sendUsersList();
 		}
-		pw.println(resp);
-		pw.flush();
 	}
 
 	private void processLogoutReq(String req) throws IOException {
@@ -161,31 +160,31 @@ public class ClientHandler implements Runnable {
 		}
 		return found;
 	}
-	
-	private void processMessage(String req) throws IOException {
-		PrintWriter p;
-		String from=req.split(":")[1];
-		String message=req.split(":")[2];
 
-		for (User lu : onlineUsersList) {			
-			p = lu.getPrintWriter();
-			p.println("MESSAGE:" + from + ":" + message + "\n");
+	private void processMessage(String req) throws IOException {
+		String sender = req.split(":")[1];
+		String message = req.split(":")[2];
+		PrintWriter p;
+		
+		for (User u : onlineUsersList) {
+			p = u.getPrintWriter();
+			p.println("MESSAGE:" + sender + ":" + message);
 			p.flush();
 		}
 	}
-	
+
 	private void processPrivateMessage(String req) throws IOException {
 		PrintWriter p;
 		System.out.println(req);
-		String to=req.split(":")[1];
-		String from=req.split(":")[2];
-		String message=req.split(":")[3];
-		
+		String to = req.split(":")[1];
+		String from = req.split(":")[2];
+		String message = req.split(":")[3];
+
 		System.out.println(req);
-		for (User lu : onlineUsersList) {
-			if (lu.getUsername().contains(to)) {
-				p = lu.getPrintWriter();
-				p.println("PRIVATEFROM:" + from + ":" + to + ":"+ message + "\n");
+		for (User u : onlineUsersList) {
+			if (u.getUsername().equals(to)) {
+				p = u.getPrintWriter();
+				p.println("PRIVATEFROM:" + from + ":" + to + ":" + message + "\n");
 				p.flush();
 
 			}
