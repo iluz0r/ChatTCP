@@ -263,7 +263,7 @@ public class ChatWindow {
 					} catch (UnknownHostException e1) {
 						e1.printStackTrace();
 					} catch (IOException e1) {
-						e1.printStackTrace();
+						JOptionPane.showMessageDialog(frame, "Server non raggiungibile", "Errore", JOptionPane.ERROR_MESSAGE);
 					}
 				}
 				if (clientConn != null) {
@@ -293,7 +293,7 @@ public class ChatWindow {
 					} catch (UnknownHostException e1) {
 						e1.printStackTrace();
 					} catch (IOException e1) {
-						e1.printStackTrace();
+						JOptionPane.showMessageDialog(frame, "Server non raggiungibile", "Errore", JOptionPane.ERROR_MESSAGE);
 					}
 				}
 				if (clientConn != null) {
