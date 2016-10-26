@@ -266,7 +266,7 @@ public class ChatWindow {
 						JOptionPane.showMessageDialog(frame, "Server non raggiungibile", "Errore", JOptionPane.ERROR_MESSAGE);
 					}
 				}
-				if (clientConn != null) {
+				if (clientConn != null && !clientConn.isClosed()) {
 					PrintWriter pw = clientConn.getPrintWriter();
 					pw.println(loginReq);
 					pw.flush();
@@ -296,7 +296,7 @@ public class ChatWindow {
 						JOptionPane.showMessageDialog(frame, "Server non raggiungibile", "Errore", JOptionPane.ERROR_MESSAGE);
 					}
 				}
-				if (clientConn != null) {
+				if (clientConn != null && !clientConn.isClosed()) {
 					PrintWriter pw = clientConn.getPrintWriter();
 					pw.println(registerReq);
 					pw.flush();
