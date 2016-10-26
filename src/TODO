@@ -1,5 +1,4 @@
 1) Code clean (with processResp() methods, names, etc)
 2) Change the string separator ':';
 3) Fix the list refresh;
-4) Add the scroll to the textArea chats;
-5) Improve the graphics (even the disable button etc)
+4) Improve the graphics (even the disable button, login and logout messages in chat, etc)

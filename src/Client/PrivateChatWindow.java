@@ -2,12 +2,15 @@ package Client;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+
 import java.awt.BorderLayout;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.PrintWriter;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.text.DefaultCaret;
 
 public class PrivateChatWindow {
 
@@ -35,17 +38,24 @@ public class PrivateChatWindow {
 		frame.getContentPane().setLayout(null);
 
 		JPanel chatPanel = new JPanel();
-		chatPanel.setBounds(0, 0, 434, 218);
+		chatPanel.setBounds(0, 0, 427, 218);
+		chatPanel.setLayout(new BorderLayout(0, 0));		
 		frame.getContentPane().add(chatPanel);
-		chatPanel.setLayout(new BorderLayout(0, 0));
 
 		chatTextArea = new JTextArea();
+		chatTextArea.setColumns(61);
+		chatTextArea.setLineWrap(true);
+		chatTextArea.setWrapStyleWord(true);
 		chatTextArea.setEditable(false);
-		chatTextArea.setRows(12);
-		chatPanel.add(chatTextArea);
+		
+        DefaultCaret caret = (DefaultCaret) chatTextArea.getCaret();
+        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+        
+		JScrollPane chatScrollPane = new JScrollPane(chatTextArea);
+		chatPanel.add(chatScrollPane);
 
 		JPanel textPanel = new JPanel();
-		textPanel.setBounds(0, 218, 434, 27);
+		textPanel.setBounds(0, 218, 427, 24);
 		frame.getContentPane().add(textPanel);
 		textPanel.setLayout(new BorderLayout(0, 0));
 

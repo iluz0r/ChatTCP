@@ -11,6 +11,8 @@ import javax.swing.JButton;
 import javax.swing.JTextArea;
 import java.awt.BorderLayout;
 import javax.swing.border.LineBorder;
+import javax.swing.text.DefaultCaret;
+
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -123,19 +125,27 @@ public class ChatWindow {
 		JPanel chatPanel = new JPanel();
 		chatPanel.setBorder(new LineBorder(Color.LIGHT_GRAY));
 		chatPanel.setBounds(0, 70, 368, 156);
-		frame.getContentPane().add(chatPanel);
 		chatPanel.setLayout(new BorderLayout(0, 0));
+		frame.getContentPane().add(chatPanel);
 
 		chatTextArea = new JTextArea();
+		chatTextArea.setColumns(51);
+		chatTextArea.setLineWrap(true);
+		chatTextArea.setWrapStyleWord(true);
 		chatTextArea.setEditable(false);
-		chatPanel.add(chatTextArea);
-
+		
+        DefaultCaret caret = (DefaultCaret) chatTextArea.getCaret();
+        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+        
+		JScrollPane chatScrollPane = new JScrollPane(chatTextArea);
+		chatPanel.add(chatScrollPane);
+		
 		JPanel textPanel = new JPanel();
 		textPanel.setBorder(new LineBorder(Color.LIGHT_GRAY));
 		textPanel.setForeground(Color.BLACK);
 		textPanel.setBounds(0, 225, 368, 30);
-		frame.getContentPane().add(textPanel);
 		textPanel.setLayout(new BorderLayout(0, 0));
+		frame.getContentPane().add(textPanel);
 
 		messageTextField = new JTextField();
 		messageTextField.addKeyListener(new SendTextKeyListener());
@@ -263,7 +273,8 @@ public class ChatWindow {
 					} catch (UnknownHostException e1) {
 						e1.printStackTrace();
 					} catch (IOException e1) {
-						JOptionPane.showMessageDialog(frame, "Server non raggiungibile", "Errore", JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(frame, "Server non raggiungibile", "Errore",
+								JOptionPane.ERROR_MESSAGE);
 					}
 				}
 				if (clientConn != null && !clientConn.isClosed()) {
@@ -293,7 +304,8 @@ public class ChatWindow {
 					} catch (UnknownHostException e1) {
 						e1.printStackTrace();
 					} catch (IOException e1) {
-						JOptionPane.showMessageDialog(frame, "Server non raggiungibile", "Errore", JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(frame, "Server non raggiungibile", "Errore",
+								JOptionPane.ERROR_MESSAGE);
 					}
 				}
 				if (clientConn != null && !clientConn.isClosed()) {
