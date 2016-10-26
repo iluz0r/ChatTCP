@@ -193,6 +193,7 @@ public class ChatWindow {
 					} else if (answer.equals("ACK:Logout")) {
 						loginButtonState = "LOGIN";
 						loginButton.setText("Login");
+						listModel.removeAllElements();
 						clientConn.closeSocket();
 					} else if (answer.equals("ACK:Registered")) {
 						JOptionPane.showMessageDialog(frame, "Lo username è ora registrato", "Messaggio",
@@ -256,8 +257,7 @@ public class ChatWindow {
 			if (!username.equals("")) {
 				String loginReq = loginButtonState + ":" + username + ":" + passwordTextField.getText();
 
-				if ((clientConn == null || clientConn.isClosed())
-						&& (serverListener == null || !serverListener.isAlive())) {
+				if ((clientConn == null || clientConn.isClosed())) {
 					try {
 						initConnection();
 					} catch (UnknownHostException e1) {
@@ -266,9 +266,11 @@ public class ChatWindow {
 						e1.printStackTrace();
 					}
 				}
-				PrintWriter pw = clientConn.getPrintWriter();
-				pw.println(loginReq);
-				pw.flush();
+				if (clientConn != null) {
+					PrintWriter pw = clientConn.getPrintWriter();
+					pw.println(loginReq);
+					pw.flush();
+				}
 			} else
 				JOptionPane.showMessageDialog(frame, "Username mancante", "Messaggio", JOptionPane.INFORMATION_MESSAGE);
 		}
@@ -285,8 +287,7 @@ public class ChatWindow {
 			if (!username.equals("") && !password.equals("")) {
 				String registerReq = "REGISTER:" + username + ":" + password;
 
-				if ((clientConn == null || clientConn.isClosed())
-						&& (serverListener == null || !serverListener.isAlive())) {
+				if ((clientConn == null || clientConn.isClosed())) {
 					try {
 						initConnection();
 					} catch (UnknownHostException e1) {
@@ -295,9 +296,11 @@ public class ChatWindow {
 						e1.printStackTrace();
 					}
 				}
-				PrintWriter pw = clientConn.getPrintWriter();
-				pw.println(registerReq);
-				pw.flush();
+				if (clientConn != null) {
+					PrintWriter pw = clientConn.getPrintWriter();
+					pw.println(registerReq);
+					pw.flush();
+				}
 			} else
 				JOptionPane.showMessageDialog(frame, "Username/Password mancante/i", "Messaggio",
 						JOptionPane.INFORMATION_MESSAGE);
