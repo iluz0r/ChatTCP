@@ -160,7 +160,6 @@ public class ChatWindow {
 		scrollPane.setViewportView(list);
 
 		privateChatWindowList = new ArrayList<>();
-
 		initConnection();
 	}
 
@@ -313,10 +312,12 @@ public class ChatWindow {
 		@Override
 		public void keyReleased(KeyEvent e) {
 			if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-				PrintWriter pw = clientConn.getPrintWriter();
-				pw.println("MESSAGE:" + userTextField.getText() + ":" + messageTextField.getText());
-				pw.flush();
-				messageTextField.setText("");
+				if (!messageTextField.getText().equals("")) {
+					PrintWriter pw = clientConn.getPrintWriter();
+					pw.println("MESSAGE:" + userTextField.getText() + ":" + messageTextField.getText());
+					pw.flush();
+					messageTextField.setText("");
+				}
 			}
 		}
 
@@ -333,16 +334,16 @@ public class ChatWindow {
 				String receiver = listModel.getElementAt(index);
 				String sender = userTextField.getText();
 				boolean found = false;
-				
-				for(PrivateChatWindow window : privateChatWindowList) {
-					if(window.getSender().equals(sender) && window.getReceiver().equals(receiver)) {
+
+				for (PrivateChatWindow window : privateChatWindowList) {
+					if (window.getSender().equals(sender) && window.getReceiver().equals(receiver)) {
 						if (window.getFrame().isVisible() == false)
 							window.getFrame().setVisible(true);
 						found = true;
 					}
 				}
-				
-				if(!found) {
+
+				if (!found) {
 					PrintWriter pw = clientConn.getPrintWriter();
 
 					PrivateChatWindow privateMessage = new PrivateChatWindow(sender, receiver, pw);

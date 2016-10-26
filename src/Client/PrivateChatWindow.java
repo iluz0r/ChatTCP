@@ -86,10 +86,12 @@ public class PrivateChatWindow {
 		@Override
 		public void keyReleased(KeyEvent e) {
 			if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-				senderPw.println("PRIVATE:" + sender + ":" + receiver + ":" + messageTextField.getText());
-				senderPw.flush();
-				setTextArea(sender, messageTextField.getText());
-				messageTextField.setText("");
+				if (!messageTextField.getText().equals("")) {
+					senderPw.println("PRIVATE:" + sender + ":" + receiver + ":" + messageTextField.getText());
+					senderPw.flush();
+					setTextArea(sender, messageTextField.getText());
+					messageTextField.setText("");
+				}
 			}
 		}
 
