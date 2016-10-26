@@ -17,11 +17,14 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+
 import javax.swing.JScrollPane;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
@@ -40,6 +43,7 @@ public class GUI {
 
 	private ClientConnection clientConn;
 	private Thread serverListener;
+	private ArrayList<PrivateMessage> listPrivateUsers;
 
 	/**
 	 * Launch the application.
@@ -148,6 +152,9 @@ public class GUI {
 		list.setVisibleRowCount(5);
 		list.addMouseListener(new ListDoubleClickListener());
 		scrollPane.setViewportView(list);
+		
+		list.addMouseListener(new MouseEventListener());
+		listPrivateUsers=new ArrayList<PrivateMessage>();
 
 		initConnection();
 	}
@@ -198,8 +205,33 @@ public class GUI {
 						for (int i = 1; i < list.length; i++)
 							listModel.addElement(list[i]);
 					} else if (answer.startsWith("MESSAGE:")) {
-						chatTextArea.append(answer.split(":")[1] + "\n");
+						String from=answer.split(":")[1];
+						String message=answer.split(":")[2];
+						chatTextArea.append(from + ":" + message +"\n");
 						messageTextField.setText("");
+					} else if (answer.contains("PRIVATEFROM:")){
+						String from=answer.split(":")[1];
+						String to=answer.split(":")[2];								
+						String message=answer.split(":")[3];
+						String temp;
+						System.out.println(answer);
+						System.out.println("Ci sono "+listPrivateUsers.size()+" elementi");
+						int flagWindow=0;
+						for (PrivateMessage pm : listPrivateUsers) {
+							temp=pm.getTo();
+							System.out.println("Cosa c'è in questo piripicchio "+temp);
+							if (temp.contains(from)) {
+								System.out.println("Messaggio da "+from);
+								pm.setTextArea(from, message);
+								flagWindow=1;
+							}
+						}
+						System.out.println("flagWindow vale "+flagWindow);
+						if(flagWindow==0){
+							PrivateMessage pm = new PrivateMessage(from,to,clientConn.getPrintWriter());
+							listPrivateUsers.add(pm);
+							pm.setTextArea(from, message);
+						}
 					}
 				}
 			} catch (UnknownHostException e) {
@@ -285,29 +317,64 @@ public class GUI {
 
 	}
 
-	private class SendTextKeyListener extends KeyAdapter {
+	class SendTextKeyListener extends KeyAdapter {
 
 		@Override
 		public void keyReleased(KeyEvent e) {
 			if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-				// try {
-				System.out.println(messageTextField.getText());
+				
 				PrintWriter pw = clientConn.getPrintWriter();
-				pw.println(messageTextField.getText());
+				pw.println("MESSAGE:"+userTextField.getText()+":"+messageTextField.getText());
+				System.out.println("MESSAGE:"+userTextField.getText()+":"+messageTextField.getText());
 				pw.flush();
 
-				// BufferedReader br = new BufferedReader(new
-				// InputStreamReader(socket.getInputStream(), "UTF-8"));
-				// String answer = br.readLine();
-				// chatTextArea.append(answer + "\n");
-				// messageTextField.setText("");
-				// socket.close();
-				// } catch (UnknownHostException e1) {
-				// e1.printStackTrace();
-				// } catch (IOException e1) {
-				// e1.printStackTrace();
-				// }
 			}
+		}
+
+	}
+
+	class MouseEventListener implements MouseListener {
+
+		@Override
+		public void mouseClicked(MouseEvent evt) {
+			JList<String> list = (JList) evt.getSource();
+			if (evt.getClickCount() == 2) {
+
+				// Double-click detected
+								
+				int index = list.locationToIndex(evt.getPoint());
+				String to = listModel.getElementAt(index);
+				String from = userTextField.getText();
+				PrintWriter pw = clientConn.getPrintWriter();
+				
+				PrivateMessage privateMessage = new PrivateMessage(from, to, pw);
+				listPrivateUsers.add(privateMessage);
+				
+			}
+		}
+
+		@Override
+		public void mouseEntered(MouseEvent e) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void mouseExited(MouseEvent e) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void mousePressed(MouseEvent e) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void mouseReleased(MouseEvent e) {
+			// TODO Auto-generated method stub
+
 		}
 
 	}

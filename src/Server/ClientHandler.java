@@ -46,7 +46,9 @@ public class ClientHandler implements Runnable {
 					processRegisterReq(req, usersReader, usersWriter);
 				else if (req.contains("LOGOUT:"))
 					processLogoutReq(req);
-				else {
+				else if (req.contains("PRIVATETO:"))
+					processPrivateMessage(req);
+				else if (req.contains("MESSAGE")){
 					processMessage(req);
 				}
 
@@ -137,19 +139,6 @@ public class ClientHandler implements Runnable {
 		}
 	}
 
-	private void processMessage(String req) throws IOException {
-		PrintWriter p;
-
-		for (User u : onlineUsersList) {
-			if (u.getUsername().contains("Goku")) {
-				p = u.getPrintWriter();
-				p.println("MESSAGE:" + req);
-				p.flush();
-
-			}
-		}
-	}
-
 	private String getUserPassword(BufferedReader usersReader, String user) throws IOException {
 		String line;
 		String password = null;
@@ -171,6 +160,36 @@ public class ClientHandler implements Runnable {
 				found = true;
 		}
 		return found;
+	}
+	
+	private void processMessage(String req) throws IOException {
+		PrintWriter p;
+		String from=req.split(":")[1];
+		String message=req.split(":")[2];
+
+		for (User lu : onlineUsersList) {			
+			p = lu.getPrintWriter();
+			p.println("MESSAGE:" + from + ":" + message + "\n");
+			p.flush();
+		}
+	}
+	
+	private void processPrivateMessage(String req) throws IOException {
+		PrintWriter p;
+		System.out.println(req);
+		String to=req.split(":")[1];
+		String from=req.split(":")[2];
+		String message=req.split(":")[3];
+		
+		System.out.println(req);
+		for (User lu : onlineUsersList) {
+			if (lu.getUsername().contains(to)) {
+				p = lu.getPrintWriter();
+				p.println("PRIVATEFROM:" + from + ":" + to + ":"+ message + "\n");
+				p.flush();
+
+			}
+		}
 	}
 
 }
