@@ -8,26 +8,18 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-public class Client {
+public class ClientConnection {
 
 	private int port;
 	private Socket socket;
 	private BufferedReader br;
 	private PrintWriter pw;
 
-	public Client() throws UnknownHostException, IOException {
+	public ClientConnection() throws UnknownHostException, IOException {
 		port = 1330;
 		socket = new Socket("localhost", port);
 		pw = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
 		br = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
-	}
-
-	public Socket getSocket() {
-		return socket;
-	}
-
-	public void setSocket(Socket socket) {
-		this.socket = socket;
 	}
 
 	public BufferedReader getBufferedReader() {
@@ -36,6 +28,10 @@ public class Client {
 
 	public PrintWriter getPrintWriter() {
 		return pw;
+	}
+	
+	public boolean isClosed() {
+		return socket.isClosed();
 	}
 
 	public void closeSocket() throws IOException {

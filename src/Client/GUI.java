@@ -16,7 +16,6 @@ import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.Socket;
 import java.net.UnknownHostException;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
@@ -25,6 +24,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.JScrollPane;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 
 public class GUI {
 
@@ -38,7 +38,7 @@ public class GUI {
 	private JList<String> list;
 	private DefaultListModel<String> listModel;
 
-	private Client client;
+	private ClientConnection clientConn;
 	private Thread serverListener;
 
 	/**
@@ -153,7 +153,7 @@ public class GUI {
 	}
 
 	private void initConnection() throws UnknownHostException, IOException {
-		client = new Client();
+		clientConn = new ClientConnection();
 
 		serverListener = new Thread(new ServerListener());
 		serverListener.start();
@@ -165,27 +165,39 @@ public class GUI {
 		public void run() {
 			try {
 				String answer;
-				Socket socket = client.getSocket();
-				BufferedReader br = client.getBufferedReader();
+				BufferedReader br = clientConn.getBufferedReader();
 
-				while (!socket.isClosed() && (answer = br.readLine()) != null) {
+				while (!clientConn.isClosed() && (answer = br.readLine()) != null) {
 					System.out.println("Il server listener ha ricevuto " + answer);
 
-					if (answer.contains("ACK:Login")) {
+					if (answer.startsWith("ACK:Login")) {
 						loginButtonState = "LOGOUT";
 						loginButton.setText("Logout");
-					} else if (answer.contains("ACK:Logout")) {
+					} else if (answer.equals("NACK:WrongPassword")) {
+						JOptionPane.showMessageDialog(frame, "Password errata", "Errore", JOptionPane.ERROR_MESSAGE);
+					} else if (answer.equals("NACK:UserAlreadyOnline")) {
+						JOptionPane.showMessageDialog(frame, "L'utente è già connesso", "Errore",
+								JOptionPane.ERROR_MESSAGE);
+					} else if (answer.equals("NACK:NotExistingUser")) {
+						JOptionPane.showMessageDialog(frame, "Lo username scelto non è esistente", "Errore",
+								JOptionPane.ERROR_MESSAGE);
+					} else if (answer.equals("ACK:Logout")) {
 						loginButtonState = "LOGIN";
 						loginButton.setText("Login");
-
-						client.closeSocket();
-					} else if (answer.contains("LIST:")) {
+						clientConn.closeSocket();
+					} else if (answer.equals("ACK:Registered")) {
+						JOptionPane.showMessageDialog(frame, "Lo username è ora registrato", "Messaggio",
+								JOptionPane.INFORMATION_MESSAGE);
+					} else if (answer.equals("NACK:UsernameNotAvailable")) {
+						JOptionPane.showMessageDialog(frame, "Lo username scelto è già registrato", "Errore",
+								JOptionPane.ERROR_MESSAGE);
+					} else if (answer.startsWith("LIST:")) {
 						String[] list = answer.split(":");
-
 						listModel.removeAllElements();
+
 						for (int i = 1; i < list.length; i++)
 							listModel.addElement(list[i]);
-					} else if (answer.contains("MESSAGE:")) {
+					} else if (answer.startsWith("MESSAGE:")) {
 						chatTextArea.append(answer.split(":")[1] + "\n");
 						messageTextField.setText("");
 					}
@@ -203,21 +215,27 @@ public class GUI {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			String loginReq = loginButtonState + ":" + userTextField.getText() + ":" + passwordTextField.getText();
+			String username = userTextField.getText();
 
-			if (client.getSocket().isClosed() && !serverListener.isAlive()) {
-				try {
-					initConnection();
-				} catch (UnknownHostException e1) {
-					e1.printStackTrace();
-				} catch (IOException e1) {
-					e1.printStackTrace();
+			if (!username.equals("")) {
+				String loginReq = loginButtonState + ":" + username + ":" + passwordTextField.getText();
+
+				if (clientConn.isClosed() && !serverListener.isAlive()) {
+					try {
+						initConnection();
+					} catch (UnknownHostException e1) {
+						e1.printStackTrace();
+					} catch (IOException e1) {
+						e1.printStackTrace();
+					}
 				}
-			}
 
-			PrintWriter pw = client.getPrintWriter();
-			pw.println(loginReq);
-			pw.flush();
+				PrintWriter pw = clientConn.getPrintWriter();
+				pw.println(loginReq);
+				pw.flush();
+			} else {
+				JOptionPane.showMessageDialog(frame, "Username mancante", "Messaggio", JOptionPane.INFORMATION_MESSAGE);
+			}
 		}
 
 	}
@@ -226,20 +244,28 @@ public class GUI {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			String registerReq = "REGISTER:" + userTextField.getText() + ":" + passwordTextField.getText();
+			String username = userTextField.getText();
+			String password = passwordTextField.getText();
 
-			if (client.getSocket().isClosed() && !serverListener.isAlive()) {
-				try {
-					initConnection();
-				} catch (UnknownHostException e1) {
-					e1.printStackTrace();
-				} catch (IOException e1) {
-					e1.printStackTrace();
+			if (!username.equals("") && !password.equals("")) {
+				String registerReq = "REGISTER:" + username + ":" + password;
+
+				if (clientConn.isClosed() && !serverListener.isAlive()) {
+					try {
+						initConnection();
+					} catch (UnknownHostException e1) {
+						e1.printStackTrace();
+					} catch (IOException e1) {
+						e1.printStackTrace();
+					}
 				}
+				PrintWriter pw = clientConn.getPrintWriter();
+				pw.println(registerReq);
+				pw.flush();
+			} else {
+				JOptionPane.showMessageDialog(frame, "Username/Password mancante/i", "Messaggio",
+						JOptionPane.INFORMATION_MESSAGE);
 			}
-			PrintWriter pw = client.getPrintWriter();
-			pw.println(registerReq);
-			pw.flush();
 		}
 
 	}
@@ -266,7 +292,7 @@ public class GUI {
 			if (e.getKeyCode() == KeyEvent.VK_ENTER) {
 				// try {
 				System.out.println(messageTextField.getText());
-				PrintWriter pw = client.getPrintWriter();
+				PrintWriter pw = clientConn.getPrintWriter();
 				pw.println(messageTextField.getText());
 				pw.flush();
 

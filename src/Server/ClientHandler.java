@@ -60,29 +60,37 @@ public class ClientHandler implements Runnable {
 
 	private void processLoginReq(String req, BufferedReader usersReader) throws IOException {
 		String username = req.split(":")[1];
-		String password = "";
+		String reqPsw = null;
+		String resp = "";
 
-		if (req.split(":").length == 3)
-			password = req.split(":")[2];
+		if (isUserOnline(username))
+			resp = "NACK:UserAlreadyOnline";
+		else {
+			String psw = getUserPassword(usersReader, username);
+			if (req.split(":").length == 3)
+				reqPsw = req.split(":")[2];
 
-		String psw = getUserPassword(usersReader, username);
+			if (psw != null) {
+				if (reqPsw != null) {
+					if (psw.equals(reqPsw))
+						resp = "ACK:LoginAsAuthenticated";
+					else
+						resp = "NACK:WrongPassword";
+				} else
+					resp = "NACK:WrongPassword";
+			} else if (reqPsw == null)
+				resp = "ACK:LoginAsGuest";
+			else
+				resp = "NACK:NotExistingUser";
+		}
 
-		if (psw != null) {
-			if (!psw.equals(password))
-				pw.println("NACK:WrongPassword\n");
-			else {
-				user.setUsername(username);
-				onlineUsersList.add(user);
-				pw.println("ACK:LoginAsAuthenticated\n");
-			}
-		} else {
+		if (resp.startsWith("ACK:")) {
 			user.setUsername(username);
 			onlineUsersList.add(user);
-			pw.println("ACK:LoginAsGuest\n");
+			sendUsersList();
 		}
+		pw.println(resp);
 		pw.flush();
-
-		sendUsersList();
 	}
 
 	private void processLogoutReq(String req) throws IOException {
@@ -103,11 +111,11 @@ public class ClientHandler implements Runnable {
 		String psw = getUserPassword(usersReader, user);
 
 		if (psw != null)
-			pw.println("NACK:AlreadyExistingUser\n");
+			pw.println("NACK:UsernameNotAvailable");
 		else {
 			usersWriter.write(user + ":" + password);
 			usersWriter.newLine();
-			pw.println("ACK:Registered\n");
+			pw.println("ACK:Registered");
 		}
 		pw.flush();
 	}
@@ -124,7 +132,7 @@ public class ClientHandler implements Runnable {
 
 		for (User u : onlineUsersList) {
 			p = u.getPrintWriter();
-			p.println(onlineUsers + "\n");
+			p.println(onlineUsers);
 			p.flush();
 		}
 	}
@@ -135,7 +143,7 @@ public class ClientHandler implements Runnable {
 		for (User u : onlineUsersList) {
 			if (u.getUsername().contains("Goku")) {
 				p = u.getPrintWriter();
-				p.println("MESSAGE:" + req + "\n");
+				p.println("MESSAGE:" + req);
 				p.flush();
 
 			}
@@ -153,6 +161,16 @@ public class ClientHandler implements Runnable {
 		}
 
 		return password;
+	}
+
+	private boolean isUserOnline(String username) {
+		boolean found = false;
+
+		for (User s : onlineUsersList) {
+			if (s.getUsername().equals(username))
+				found = true;
+		}
+		return found;
 	}
 
 }
