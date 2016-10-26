@@ -14,15 +14,11 @@ import java.util.ArrayList;
 public class ClientHandler implements Runnable {
 
 	private User user;
-	private BufferedReader br;
-	private PrintWriter pw;
 	private ArrayList<User> onlineUsersList;
 
 	public ClientHandler(Socket socket, ArrayList<User> onlineUsersList)
 			throws UnsupportedEncodingException, IOException {
 		user = new User(socket);
-		br = user.getBufferedReader();
-		pw = user.getPrintWriter();
 		this.onlineUsersList = onlineUsersList;
 	}
 
@@ -30,6 +26,7 @@ public class ClientHandler implements Runnable {
 	public void run() {
 		try {
 			String req;
+			BufferedReader br = user.getBufferedReader();
 
 			while (!user.isClosed() && (req = br.readLine()) != null) {
 				String pathUsers = System.getProperty("user.dir") + "/src/Server/users.txt";
@@ -47,7 +44,7 @@ public class ClientHandler implements Runnable {
 					processLogoutReq(req);
 				else if (req.startsWith("PRIVATE:"))
 					processPrivateMessage(req);
-				else if (req.startsWith("MESSAGE:")) 
+				else if (req.startsWith("MESSAGE:"))
 					processMessage(req);
 
 				usersWriter.close();
@@ -83,9 +80,10 @@ public class ClientHandler implements Runnable {
 			else
 				resp = "NACK:NotExistingUser";
 		}
-
+		PrintWriter pw = user.getPrintWriter();
 		pw.println(resp);
 		pw.flush();
+
 		if (resp.startsWith("ACK:")) {
 			user.setUsername(username);
 			onlineUsersList.add(user);
@@ -96,6 +94,7 @@ public class ClientHandler implements Runnable {
 	private void processLogoutReq(String req) throws IOException {
 		onlineUsersList.remove(user);
 
+		PrintWriter pw = user.getPrintWriter();
 		pw.println("ACK:Logout");
 		pw.flush();
 
@@ -105,30 +104,30 @@ public class ClientHandler implements Runnable {
 
 	private void processRegisterReq(String req, BufferedReader usersReader, BufferedWriter usersWriter)
 			throws IOException {
-		String user = req.split(":")[1];
+		String username = req.split(":")[1];
 		String password = req.split(":")[2];
-
-		String psw = getUserPassword(usersReader, user);
+		PrintWriter pw = user.getPrintWriter();
+		String psw = getUserPassword(usersReader, username);
 
 		if (psw != null)
 			pw.println("NACK:UsernameNotAvailable");
 		else {
-			usersWriter.write(user + ":" + password);
+			usersWriter.write(username + ":" + password);
 			usersWriter.newLine();
 			pw.println("ACK:Registered");
 		}
 		pw.flush();
 	}
-	
+
 	private void processMessage(String req) throws IOException {
 		String sender = req.split(":")[1];
 		String message = req.split(":")[2];
-		PrintWriter p;
+		PrintWriter pw;
 
 		for (User u : onlineUsersList) {
-			p = u.getPrintWriter();
-			p.println("MESSAGE:" + sender + ":" + message);
-			p.flush();
+			pw = u.getPrintWriter();
+			pw.println("MESSAGE:" + sender + ":" + message);
+			pw.flush();
 		}
 	}
 
@@ -137,7 +136,7 @@ public class ClientHandler implements Runnable {
 		String receiver = req.split(":")[2];
 		String message = req.split(":")[3];
 		PrintWriter p;
-		
+
 		for (User u : onlineUsersList) {
 			if (u.getUsername().equals(receiver)) {
 				p = u.getPrintWriter();

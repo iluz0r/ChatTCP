@@ -342,7 +342,7 @@ public class ChatWindow {
 					}
 				}
 				
-				if(!found){
+				if(!found) {
 					PrintWriter pw = clientConn.getPrintWriter();
 
 					PrivateChatWindow privateMessage = new PrivateChatWindow(sender, receiver, pw);
