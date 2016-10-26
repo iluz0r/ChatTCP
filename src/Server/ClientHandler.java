@@ -39,17 +39,16 @@ public class ClientHandler implements Runnable {
 				BufferedReader usersReader = new BufferedReader(new FileReader(pathUsers));
 				BufferedWriter usersWriter = new BufferedWriter(new FileWriter(pathUsers, true));
 
-				if (req.contains("LOGIN:"))
+				if (req.startsWith("LOGIN:"))
 					processLoginReq(req, usersReader);
-				else if (req.contains("REGISTER:"))
+				else if (req.startsWith("REGISTER:"))
 					processRegisterReq(req, usersReader, usersWriter);
-				else if (req.contains("LOGOUT:"))
+				else if (req.startsWith("LOGOUT:"))
 					processLogoutReq(req);
-				else if (req.contains("PRIVATETO:"))
+				else if (req.startsWith("PRIVATE:"))
 					processPrivateMessage(req);
-				else if (req.contains("MESSAGE")) {
+				else if (req.startsWith("MESSAGE:")) 
 					processMessage(req);
-				}
 
 				usersWriter.close();
 			}
@@ -120,6 +119,33 @@ public class ClientHandler implements Runnable {
 		}
 		pw.flush();
 	}
+	
+	private void processMessage(String req) throws IOException {
+		String sender = req.split(":")[1];
+		String message = req.split(":")[2];
+		PrintWriter p;
+
+		for (User u : onlineUsersList) {
+			p = u.getPrintWriter();
+			p.println("MESSAGE:" + sender + ":" + message);
+			p.flush();
+		}
+	}
+
+	private void processPrivateMessage(String req) throws IOException {
+		String sender = req.split(":")[1];
+		String receiver = req.split(":")[2];
+		String message = req.split(":")[3];
+		PrintWriter p;
+		
+		for (User u : onlineUsersList) {
+			if (u.getUsername().equals(receiver)) {
+				p = u.getPrintWriter();
+				p.println("PRIVATE:" + sender + ":" + receiver + ":" + message);
+				p.flush();
+			}
+		}
+	}
 
 	private void sendUsersList() throws UnsupportedEncodingException, IOException {
 		String onlineUsers = "LIST:";
@@ -159,36 +185,6 @@ public class ClientHandler implements Runnable {
 				found = true;
 		}
 		return found;
-	}
-
-	private void processMessage(String req) throws IOException {
-		String sender = req.split(":")[1];
-		String message = req.split(":")[2];
-		PrintWriter p;
-		
-		for (User u : onlineUsersList) {
-			p = u.getPrintWriter();
-			p.println("MESSAGE:" + sender + ":" + message);
-			p.flush();
-		}
-	}
-
-	private void processPrivateMessage(String req) throws IOException {
-		PrintWriter p;
-		System.out.println(req);
-		String to = req.split(":")[1];
-		String from = req.split(":")[2];
-		String message = req.split(":")[3];
-
-		System.out.println(req);
-		for (User u : onlineUsersList) {
-			if (u.getUsername().equals(to)) {
-				p = u.getPrintWriter();
-				p.println("PRIVATEFROM:" + from + ":" + to + ":" + message + "\n");
-				p.flush();
-
-			}
-		}
 	}
 
 }

@@ -43,7 +43,7 @@ public class ChatWindow {
 
 	private ClientConnection clientConn;
 	private Thread serverListener;
-	private ArrayList<PrivateChatWindow> listPrivateUsers;
+	private ArrayList<PrivateChatWindow> privateChatWindowList;
 
 	/**
 	 * Launch the application.
@@ -143,23 +143,23 @@ public class ChatWindow {
 		messageTextField.setColumns(10);
 
 		listModel = new DefaultListModel<String>();
-		
+
 		JPanel listPanel = new JPanel();
 		listPanel.setBorder(new LineBorder(Color.LIGHT_GRAY));
 		listPanel.setBounds(368, 70, 123, 185);
 		frame.getContentPane().add(listPanel);
-						listPanel.setLayout(new BorderLayout(0, 0));
-				
-						JScrollPane scrollPane = new JScrollPane();
-						listPanel.add(scrollPane);
-						list = new JList<String>(listModel);
-						list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-						list.setSelectedIndex(0);
-						list.setVisibleRowCount(5);
-						list.addMouseListener(new ListDoubleClickListener());
-						scrollPane.setViewportView(list);
+		listPanel.setLayout(new BorderLayout(0, 0));
 
-		listPrivateUsers = new ArrayList<PrivateChatWindow>();
+		JScrollPane scrollPane = new JScrollPane();
+		listPanel.add(scrollPane);
+		list = new JList<String>(listModel);
+		list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		list.setSelectedIndex(0);
+		list.setVisibleRowCount(5);
+		list.addMouseListener(new ListDoubleClickListener());
+		scrollPane.setViewportView(list);
+
+		privateChatWindowList = new ArrayList<>();
 
 		initConnection();
 	}
@@ -213,30 +213,31 @@ public class ChatWindow {
 						String sender = answer.split(":")[1];
 						String message = answer.split(":")[2];
 						chatTextArea.append(sender + ": " + message + "\n");
-					} else if (answer.contains("PRIVATEFROM:")) {
-						String from = answer.split(":")[1];
-						String to = answer.split(":")[2];
+					} else if (answer.startsWith("PRIVATE:")) {
+						String sender = answer.split(":")[1];
+						String receiver = answer.split(":")[2];
 						String message = answer.split(":")[3];
 						String temp;
-						System.out.println(answer);
-						System.out.println("Ci sono " + listPrivateUsers.size() + " elementi");
 						int flagWindow = 0;
-						for (PrivateChatWindow pm : listPrivateUsers) {
-							temp = pm.getTo();
-							System.out.println("Cosa c'è in questo piripicchio " + temp);
-							if (temp.contains(from) || temp.contains(to)) {
-								System.out.println("Messaggio da " + from);
-								pm.setTextArea(from, message);
+						
+						// Controlla se la finestra era stata già aperta e poi chiusa
+						for (PrivateChatWindow window : privateChatWindowList) {
+							System.out.println("Sono qui!");
+							temp = window.getReceiver();
+							if (temp.contains(sender) || temp.contains(receiver)) {
+								window.setTextArea(sender, message);
 								flagWindow = 1;
-								if (pm.getFrame().isVisible() == false)
-									pm.getFrame().setVisible(true);
+								if (window.getFrame().isVisible() == false)
+									window.getFrame().setVisible(true);
 							}
 						}
-						System.out.println("flagWindow vale " + flagWindow);
+						
+						// Se la finestra non è mai stata creata, la crea
 						if (flagWindow == 0) {
-							PrivateChatWindow pm = new PrivateChatWindow(from, to, clientConn.getPrintWriter());
-							listPrivateUsers.add(pm);
-							pm.setTextArea(from, message);
+							System.out.println("Creo per la prima volta la finestra");
+							PrivateChatWindow pm = new PrivateChatWindow(receiver, sender, clientConn.getPrintWriter());
+							privateChatWindowList.add(pm);
+							pm.setTextArea(sender, message);
 						}
 					}
 				}
@@ -305,25 +306,6 @@ public class ChatWindow {
 
 	}
 
-	private class ListDoubleClickListener extends MouseAdapter {
-
-		@Override
-		public void mouseClicked(MouseEvent evt) {
-			JList<?> list = (JList<?>) evt.getSource();
-
-			if (evt.getClickCount() == 2) {
-				int index = list.locationToIndex(evt.getPoint());
-				String to = listModel.getElementAt(index);
-				String from = userTextField.getText();
-				PrintWriter pw = clientConn.getPrintWriter();
-
-				PrivateChatWindow privateMessage = new PrivateChatWindow(from, to, pw);
-				listPrivateUsers.add(privateMessage);
-			}
-		}
-
-	}
-
 	private class SendTextKeyListener extends KeyAdapter {
 
 		@Override
@@ -333,6 +315,25 @@ public class ChatWindow {
 				pw.println("MESSAGE:" + userTextField.getText() + ":" + messageTextField.getText());
 				pw.flush();
 				messageTextField.setText("");
+			}
+		}
+
+	}
+
+	private class ListDoubleClickListener extends MouseAdapter {
+
+		@Override
+		public void mouseClicked(MouseEvent evt) {
+			JList<?> list = (JList<?>) evt.getSource();
+
+			if (evt.getClickCount() == 2) {
+				int index = list.locationToIndex(evt.getPoint());
+				String receiver = listModel.getElementAt(index);
+				String sender = userTextField.getText();
+				PrintWriter pw = clientConn.getPrintWriter();
+
+				PrivateChatWindow privateMessage = new PrivateChatWindow(sender, receiver, pw);
+				privateChatWindowList.add(privateMessage);
 			}
 		}
 

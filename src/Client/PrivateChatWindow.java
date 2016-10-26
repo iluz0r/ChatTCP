@@ -15,37 +15,21 @@ public class PrivateChatWindow {
 	private JTextField messageTextField;
 	private JTextArea chatTextArea;
 
-	private String from;
-	private String to;
-	private PrintWriter pw;
+	private String sender;
+	private String receiver;
+	private PrintWriter senderPw;
 
-	public JTextArea getTextArea() {
-		return chatTextArea;
-	}
-
-	public String getTo() {
-		return to;
-	}
-
-	public void setTo(String to) {
-		this.to = to;
-	}
-
-	public void setTextArea(String from, String message) {
-		chatTextArea.append(from + ": " + message + "\n");
-	}
-
-	public PrivateChatWindow(String from, String to, PrintWriter pw) {
-		this.pw = pw;
-		this.from = from;
-		this.to = to;
+	public PrivateChatWindow(String sender, String receiver, PrintWriter senderPw) {
+		this.sender = sender;
+		this.receiver = receiver;
+		this.senderPw = senderPw;
 		initialize();
 	}
 
 	private void initialize() {
 		frame = new JFrame();
 		frame.setResizable(false);
-		frame.setTitle(from + " >> " + to);
+		frame.setTitle(sender + " >> " + receiver);
 		frame.setBounds(100, 100, 433, 270);
 		frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
 		frame.getContentPane().setLayout(null);
@@ -77,39 +61,38 @@ public class PrivateChatWindow {
 		return frame;
 	}
 
-	public void setFrame(JFrame frame) {
-		this.frame = frame;
+	public void setTextArea(String sender, String message) {
+		chatTextArea.append(sender + ": " + message + "\n");
 	}
 
-	public String getTextField() {
-		return messageTextField.getText();
+	public String getSender() {
+		return sender;
 	}
 
-	public void setTextField() {
-		messageTextField.setText("");
+	public void setSender(String from) {
+		this.sender = from;
 	}
 
-	class SendTextKeyListener extends KeyAdapter {
+	public String getReceiver() {
+		return receiver;
+	}
+
+	public void setReceiver(String receiver) {
+		this.receiver = receiver;
+	}
+
+	private class SendTextKeyListener extends KeyAdapter {
 
 		@Override
 		public void keyReleased(KeyEvent e) {
 			if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-				System.out.println(getTextField());
-				pw.println("PRIVATETO:" + to + ":" + from + ":" + messageTextField.getText());
-				pw.flush();
-				setTextArea(from, messageTextField.getText());
-				setTextField();
+				senderPw.println("PRIVATE:" + sender + ":" + receiver + ":" + messageTextField.getText());
+				senderPw.flush();
+				setTextArea(sender, messageTextField.getText());
+				messageTextField.setText("");
 			}
 		}
 
-	}
-
-	public String getFrom() {
-		return from;
-	}
-
-	public void setFrom(String from) {
-		this.from = from;
 	}
 
 }
