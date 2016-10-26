@@ -1,4 +1,5 @@
-1) Code clean (with processResp() methods, names, etc)
+1) Code clean (with processXxxResp() methods, names, etc)
 2) Change the string separator ':';
 3) Fix the list refresh;
-4) Improve the graphics (even the disable button, login and logout messages in chat, etc)
+4) Improve the graphics (login and logout messages in chat, etc)
+5) Maybe delete the privateChatList on logout
