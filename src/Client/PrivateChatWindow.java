@@ -39,7 +39,7 @@ public class PrivateChatWindow {
 
 		JPanel chatPanel = new JPanel();
 		chatPanel.setBounds(0, 0, 427, 218);
-		chatPanel.setLayout(new BorderLayout(0, 0));		
+		chatPanel.setLayout(new BorderLayout(0, 0));
 		frame.getContentPane().add(chatPanel);
 
 		chatTextArea = new JTextArea();
@@ -47,10 +47,10 @@ public class PrivateChatWindow {
 		chatTextArea.setLineWrap(true);
 		chatTextArea.setWrapStyleWord(true);
 		chatTextArea.setEditable(false);
-		
-        DefaultCaret caret = (DefaultCaret) chatTextArea.getCaret();
-        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
-        
+
+		DefaultCaret caret = (DefaultCaret) chatTextArea.getCaret();
+		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+
 		JScrollPane chatScrollPane = new JScrollPane(chatTextArea);
 		chatPanel.add(chatScrollPane);
 

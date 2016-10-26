@@ -40,6 +40,7 @@ public class ChatWindow {
 	private JTextField passwordTextField;
 	private JButton loginButton;
 	private String loginButtonState;
+	private JButton registerButton;
 	private JList<String> list;
 	private DefaultListModel<String> listModel;
 
@@ -117,7 +118,7 @@ public class ChatWindow {
 		loginPanel.add(passwordTextField);
 		passwordTextField.setColumns(10);
 
-		JButton registerButton = new JButton("Register");
+		registerButton = new JButton("Register");
 		registerButton.addActionListener(new RegisterButtonListener());
 		registerButton.setBounds(242, 41, 89, 20);
 		loginPanel.add(registerButton);
@@ -133,13 +134,13 @@ public class ChatWindow {
 		chatTextArea.setLineWrap(true);
 		chatTextArea.setWrapStyleWord(true);
 		chatTextArea.setEditable(false);
-		
-        DefaultCaret caret = (DefaultCaret) chatTextArea.getCaret();
-        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
-        
+
+		DefaultCaret caret = (DefaultCaret) chatTextArea.getCaret();
+		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+
 		JScrollPane chatScrollPane = new JScrollPane(chatTextArea);
 		chatPanel.add(chatScrollPane);
-		
+
 		JPanel textPanel = new JPanel();
 		textPanel.setBorder(new LineBorder(Color.LIGHT_GRAY));
 		textPanel.setForeground(Color.BLACK);
@@ -148,9 +149,9 @@ public class ChatWindow {
 		frame.getContentPane().add(textPanel);
 
 		messageTextField = new JTextField();
+		messageTextField.setEnabled(false);
 		messageTextField.addKeyListener(new SendTextKeyListener());
 		textPanel.add(messageTextField);
-		messageTextField.setColumns(10);
 
 		listModel = new DefaultListModel<String>();
 
@@ -163,6 +164,7 @@ public class ChatWindow {
 		JScrollPane scrollPane = new JScrollPane();
 		listPanel.add(scrollPane);
 		list = new JList<String>(listModel);
+		list.setEnabled(false);
 		list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		list.setSelectedIndex(0);
 		list.setVisibleRowCount(5);
@@ -192,6 +194,11 @@ public class ChatWindow {
 					if (answer.startsWith("ACK:Login")) {
 						loginButtonState = "LOGOUT";
 						loginButton.setText("Logout");
+						messageTextField.setEnabled(true);
+						list.setEnabled(true);
+						userTextField.setEnabled(false);
+						passwordTextField.setEnabled(false);
+						registerButton.setEnabled(false);
 					} else if (answer.equals("NACK:WrongPassword")) {
 						JOptionPane.showMessageDialog(frame, "Password errata", "Errore", JOptionPane.ERROR_MESSAGE);
 					} else if (answer.equals("NACK:UserAlreadyOnline")) {
@@ -203,6 +210,11 @@ public class ChatWindow {
 					} else if (answer.equals("ACK:Logout")) {
 						loginButtonState = "LOGIN";
 						loginButton.setText("Login");
+						messageTextField.setEnabled(false);
+						list.setEnabled(false);
+						userTextField.setEnabled(true);
+						passwordTextField.setEnabled(true);
+						registerButton.setEnabled(true);
 						listModel.removeAllElements();
 						clientConn.closeSocket();
 					} else if (answer.equals("ACK:Registered")) {
@@ -267,7 +279,7 @@ public class ChatWindow {
 			if (!username.equals("")) {
 				String loginReq = loginButtonState + ":" + username + ":" + passwordTextField.getText();
 
-				if ((clientConn == null || clientConn.isClosed())) {
+				if (clientConn == null || clientConn.isClosed()) {
 					try {
 						initConnection();
 					} catch (UnknownHostException e1) {
@@ -298,7 +310,7 @@ public class ChatWindow {
 			if (!username.equals("") && !password.equals("")) {
 				String registerReq = "REGISTER:" + username + ":" + password;
 
-				if ((clientConn == null || clientConn.isClosed())) {
+				if (clientConn == null || clientConn.isClosed()) {
 					try {
 						initConnection();
 					} catch (UnknownHostException e1) {
@@ -342,7 +354,7 @@ public class ChatWindow {
 		public void mouseClicked(MouseEvent evt) {
 			JList<?> list = (JList<?>) evt.getSource();
 
-			if (evt.getClickCount() == 2) {
+			if (list.isEnabled() && evt.getClickCount() == 2) {
 				int index = list.locationToIndex(evt.getPoint());
 				String receiver = listModel.getElementAt(index);
 				String sender = userTextField.getText();
