@@ -43,9 +43,9 @@ public class ClientHandler implements Runnable {
 				else if (req.startsWith("LOGOUT:"))
 					processLogoutReq(req);
 				else if (req.startsWith("PRIVATE:"))
-					processPrivateMessage(req);
+					processPrivateReq(req);
 				else if (req.startsWith("MESSAGE:"))
-					processMessage(req);
+					processMessageReq(req);
 
 				usersWriter.close();
 			}
@@ -88,7 +88,7 @@ public class ClientHandler implements Runnable {
 			user.setUsername(username);
 			onlineUsersList.add(user);
 			sendUsersList();
-			processMessage("MESSAGE:"+username+":è entrato");
+			processMessageReq("MESSAGE:" + "1:" + username + ":" + "si è connesso");
 		}
 	}
 
@@ -100,8 +100,8 @@ public class ClientHandler implements Runnable {
 		pw.flush();
 
 		sendUsersList();
-		processMessage("MESSAGE:"+user.getUsername()+":è uscito");
-		//processPrivateMessageErase(user.getUsername());
+		processMessageReq("MESSAGE:" + "1:" + user.getUsername() + ":" + "si è disconnesso");
+		// processPrivateMessageErase(user.getUsername());
 		user.closeSocket();
 	}
 
@@ -122,26 +122,25 @@ public class ClientHandler implements Runnable {
 		pw.flush();
 	}
 
-	private void processMessage(String req) throws IOException {
-		String sender = req.split(":",3)[1];
-		String message = req.split(":",3)[2];
-	
-		PrintWriter pw;
+	private void processMessageReq(String req) throws IOException {
+		int messageType = Integer.valueOf(req.split(":", 4)[1]);
+		String sender = req.split(":", 4)[2];
+		String message = req.split(":", 4)[3];
 
+		PrintWriter pw;
 		for (User u : onlineUsersList) {
 			pw = u.getPrintWriter();
-			pw.println("MESSAGE:" + sender + ":" + message);
+			pw.println("MESSAGE:" + messageType + ":" + sender + ":" + message);
 			pw.flush();
 		}
-		
 	}
 
-	private void processPrivateMessage(String req) throws IOException {		
-		String sender = req.split(":",4)[1];
-		String receiver = req.split(":",4)[2];
-		String message = req.split(":",4)[3];
+	private void processPrivateReq(String req) throws IOException {
+		String sender = req.split(":", 4)[1];
+		String receiver = req.split(":", 4)[2];
+		String message = req.split(":", 4)[3];
+		
 		PrintWriter pw;
-
 		for (User u : onlineUsersList) {
 			if (u.getUsername().equals(receiver)) {
 				pw = u.getPrintWriter();
@@ -150,20 +149,16 @@ public class ClientHandler implements Runnable {
 			}
 		}
 	}
-	
-	/*
-	private void processPrivateMessageErase(String req){		
-		String user = req;		
-		PrintWriter pw;
 
-		for (User u : onlineUsersList) {
-			pw = u.getPrintWriter();
-			pw.println("ERASE:"+user);
-			pw.flush();
-		}
-		
-	}
-	*/
+	/*
+	 * private void processPrivateMessageErase(String req){ String user = req;
+	 * PrintWriter pw;
+	 * 
+	 * for (User u : onlineUsersList) { pw = u.getPrintWriter();
+	 * pw.println("ERASE:"+user); pw.flush(); }
+	 * 
+	 * }
+	 */
 
 	private void sendUsersList() throws UnsupportedEncodingException, IOException {
 		String onlineUsers = "LIST:";
@@ -198,10 +193,10 @@ public class ClientHandler implements Runnable {
 	private boolean isUserOnline(String username) {
 		boolean found = false;
 
-		for (User s : onlineUsersList) {
+		for (User s : onlineUsersList) 
 			if (s.getUsername().equals(username))
 				found = true;
-		}
+		
 		return found;
 	}
 

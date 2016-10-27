@@ -3,6 +3,7 @@ package Client;
 import java.awt.EventQueue;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.JLabel;
@@ -12,12 +13,8 @@ import javax.swing.JTextArea;
 import java.awt.BorderLayout;
 import javax.swing.border.LineBorder;
 import javax.swing.text.DefaultCaret;
-
-import Server.User;
-
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.UnknownHostException;
@@ -40,7 +37,7 @@ public class ChatWindow {
 	private JTextField userTextField;
 	private JTextField messageTextField;
 	private JTextArea chatTextArea;
-	private JTextField passwordTextField;
+	private JPasswordField passwordField;
 	private JButton loginButton;
 	private String loginButtonState;
 	private JButton registerButton;
@@ -116,10 +113,10 @@ public class ChatWindow {
 		passwordLabel.setBounds(10, 44, 67, 14);
 		loginPanel.add(passwordLabel);
 
-		passwordTextField = new JTextField();
-		passwordTextField.setBounds(87, 41, 120, 20);
-		loginPanel.add(passwordTextField);
-		passwordTextField.setColumns(10);
+		passwordField = new JPasswordField();
+		passwordField.setBounds(87, 41, 120, 20);
+		loginPanel.add(passwordField);
+		passwordField.setColumns(10);
 
 		registerButton = new JButton("Register");
 		registerButton.addActionListener(new RegisterButtonListener());
@@ -188,37 +185,34 @@ public class ChatWindow {
 		@Override
 		public void run() {
 			try {
-				String answer;
+				String resp;
 				BufferedReader br = clientConn.getBufferedReader();
 
-				while (!clientConn.isClosed() && (answer = br.readLine()) != null) {
-					System.out.println("Il server listener ha ricevuto " + answer);
+				while (!clientConn.isClosed() && (resp = br.readLine()) != null) {
+					System.out.println("Il server listener ha ricevuto " + resp);
 
-					if (answer.startsWith("ACK:Login")) {
+					if (resp.startsWith("ACK:Login"))
 						processLoginResp();
-					} else if (answer.equals("NACK:WrongPassword")) {
-						processErrorMessageResp("Password errata");
-					} else if (answer.equals("NACK:UserAlreadyOnline")) {						
-						processErrorMessageResp("L'utente è già connesso");
-					} else if (answer.equals("NACK:NotExistingUser")) {						
-						processErrorMessageResp("Lo username scelto non è esistente");
-					} else if (answer.equals("ACK:Logout")) {
+					else if (resp.equals("NACK:WrongPassword"))
+						showMessageResp("Password errata", JOptionPane.ERROR_MESSAGE);
+					else if (resp.equals("NACK:UserAlreadyOnline"))
+						showMessageResp("L'utente è già connesso", JOptionPane.ERROR_MESSAGE);
+					else if (resp.equals("NACK:NotExistingUser"))
+						showMessageResp("Lo username scelto non è esistente", JOptionPane.ERROR_MESSAGE);
+					else if (resp.equals("ACK:Logout"))
 						processLogoutResp();
-					} else if (answer.equals("ACK:Registered")) {						
-						processInformationMessageResp("Lo username è ora registrato");
-					} else if (answer.equals("NACK:UsernameNotAvailable")) {						
-						processErrorMessageResp("Lo username scelto è già registrato");
-					} else if (answer.startsWith("LIST:")) {
-						processListResp(answer);
-					} else if (answer.startsWith("MESSAGE:")) {
-						processMessageResp(answer);
-					} else if (answer.startsWith("PRIVATE:")) {
-						processPrivateResp(answer);
-					} 
-					
-					/*else if (answer.startsWith("ERASE:")) {
-						processPrivateMessageEraseResp(answer);
-					}*/
+					else if (resp.equals("ACK:Registered"))
+						showMessageResp("Lo username è ora registrato", JOptionPane.INFORMATION_MESSAGE);
+					else if (resp.equals("NACK:UsernameNotAvailable"))
+						showMessageResp("Lo username scelto è già registrato", JOptionPane.ERROR_MESSAGE);
+					else if (resp.startsWith("LIST:"))
+						processListResp(resp);
+					else if (resp.startsWith("MESSAGE:"))
+						processMessageResp(resp);
+					else if (resp.startsWith("PRIVATE:"))
+						processPrivateResp(resp);
+					// else if (resp.startsWith("ERASE:"))
+					// processPrivateMessageEraseResp(resp);
 				}
 			} catch (UnknownHostException e) {
 				e.printStackTrace();
@@ -229,6 +223,79 @@ public class ChatWindow {
 
 	}
 
+	private void processLoginResp() {
+		loginButtonState = "LOGOUT";
+		loginButton.setText("Logout");
+		messageTextField.setEnabled(true);
+		list.setEnabled(true);
+		userTextField.setEnabled(false);
+		passwordField.setEnabled(false);
+		registerButton.setEnabled(false);
+	}
+
+	private void processLogoutResp() throws IOException {
+		loginButtonState = "LOGIN";
+		loginButton.setText("Login");
+		messageTextField.setEnabled(false);
+		userTextField.setEnabled(true);
+		passwordField.setEnabled(true);
+		registerButton.setEnabled(true);
+		listModel.removeAllElements();
+		list.setEnabled(false);
+		privateChatWindowList.clear();
+		clientConn.closeSocket();
+	}
+
+	private void processListResp(String resp) {
+		String[] list = resp.split(":");
+
+		listModel.removeAllElements();
+		for (int i = 1; i < list.length; i++)
+			listModel.addElement(list[i]);
+	}
+
+	private void processMessageResp(String resp) {
+		int messageType = Integer.valueOf(resp.split(":", 4)[1]);
+		String sender = resp.split(":", 4)[2];
+		String message = resp.split(":", 4)[3];
+
+		if (messageType == 0)
+			chatTextArea.append(sender + ": " + message + "\n");
+		else
+			chatTextArea.append(sender + " " + message + "\n");
+	}
+
+	private void processPrivateResp(String resp) {
+		String sender = resp.split(":", 4)[1];
+		String receiver = resp.split(":", 4)[2];
+		String message = resp.split(":", 4)[3];
+		boolean found = false;
+
+		for (PrivateChatWindow window : privateChatWindowList) {
+			if (window.getSender().equals(receiver) && window.getReceiver().equals(sender)) {
+				window.setTextArea(sender, message);
+				if (window.getFrame().isVisible() == false)
+					window.getFrame().setVisible(true);
+				found = true;
+			}
+		}
+		if (!found) {
+			PrivateChatWindow window = new PrivateChatWindow(receiver, sender, clientConn.getPrintWriter());
+			privateChatWindowList.add(window);
+			window.setTextArea(sender, message);
+		}
+	}
+
+	private void showMessageResp(String resp, int messageType) {
+		JOptionPane.showMessageDialog(frame, resp, "Messaggio", messageType);
+	}
+
+	// private void processPrivateMessageEraseResp(String resp) {
+	// for (PrivateChatWindow u : privateChatWindowList)
+	// if(u.getReceiver().equals(resp))
+	// privateChatWindowList.remove(u);
+	// }
+
 	private class LoginButtonListener implements ActionListener {
 
 		@Override
@@ -236,7 +303,7 @@ public class ChatWindow {
 			String username = userTextField.getText();
 
 			if (!username.equals("")) {
-				String loginReq = loginButtonState + ":" + username + ":" + passwordTextField.getText();
+				String loginReq = loginButtonState + ":" + username + ":" + String.valueOf(passwordField.getPassword());
 
 				if (clientConn == null || clientConn.isClosed()) {
 					try {
@@ -264,7 +331,7 @@ public class ChatWindow {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			String username = userTextField.getText();
-			String password = passwordTextField.getText();
+			String password = String.valueOf(passwordField.getPassword());
 
 			if (!username.equals("") && !password.equals("")) {
 				String registerReq = "REGISTER:" + username + ":" + password;
@@ -298,7 +365,7 @@ public class ChatWindow {
 			if (e.getKeyCode() == KeyEvent.VK_ENTER) {
 				if (!messageTextField.getText().equals("")) {
 					PrintWriter pw = clientConn.getPrintWriter();
-					pw.println("MESSAGE:" + userTextField.getText() + ":" + messageTextField.getText());
+					pw.println("MESSAGE:" + "0:" + userTextField.getText() + ":" + messageTextField.getText());
 					pw.flush();
 					messageTextField.setText("");
 				}
@@ -327,10 +394,8 @@ public class ChatWindow {
 					}
 				}
 				if (!found) {
-					PrintWriter pw = clientConn.getPrintWriter();
-
-					PrivateChatWindow privateMessage = new PrivateChatWindow(sender, receiver, pw);
-					privateChatWindowList.add(privateMessage);
+					PrivateChatWindow window = new PrivateChatWindow(sender, receiver, clientConn.getPrintWriter());
+					privateChatWindowList.add(window);
 				}
 			}
 		}
@@ -343,104 +408,12 @@ public class ChatWindow {
 		public void windowClosing(WindowEvent e) {
 			if (loginButtonState.equals("LOGOUT")) {
 				PrintWriter pw = clientConn.getPrintWriter();
-				pw.println(loginButtonState + ":" + userTextField.getText() + ":" + passwordTextField.getText());
+				pw.println(loginButtonState + ":" + userTextField.getText() + ":"
+						+ String.valueOf(passwordField.getPassword()));
 				pw.flush();
 			}
 		}
 
 	}
-	
-	private void processLoginResp(){
-		loginButtonState = "LOGOUT";
-		loginButton.setText("Logout");
-		messageTextField.setEnabled(true);
-		list.setEnabled(true);
-		userTextField.setEnabled(false);
-		passwordTextField.setEnabled(false);
-		registerButton.setEnabled(false);
-	}
-	
-	private void processLogoutResp() throws IOException{
-		loginButtonState = "LOGIN";
-		loginButton.setText("Login");
-		messageTextField.setEnabled(false);
-		//list.setEnabled(false);
-		userTextField.setEnabled(true);
-		passwordTextField.setEnabled(true);
-		registerButton.setEnabled(true);
-		listModel.removeAllElements();
-		privateChatWindowList.clear();
-		clientConn.closeSocket();
-	}
-	
-	private void processListResp(String answer){
-		String[] list = answer.split(":");
-		listModel.removeAllElements();		
 
-		for (String user : list){
-		   if (user == list[0]) 
-			   continue;
-		   listModel.addElement(user);
-		}
-		
-	}
-	
-	
-	private void processMessageResp(String answer){		
-		String sender = answer.split(":",3)[1];
-		String message = answer.split(":",3)[2];
-		chatTextArea.append(sender + ": " + message + "\n");		
-	}
-	
-	/*
-	private void processPrivateMessageEraseResp(String answer){		
-		
-		for (PrivateChatWindow u : privateChatWindowList) {
-			if (u.getReceiver().equals(answer)) {
-				privateChatWindowList.remove(u);
-			}
-		}		
-	}
-	*/
-	
-	private void processPrivateResp(String answer){
-		String sender = answer.split(":",4)[1];
-		String receiver = answer.split(":",4)[2];
-		String message = answer.split(":",4)[3];
-		
-		String s, r;
-		int flagWindow = 0;
-
-		// Controlla se la finestra era stata già aperta e poi
-		// chiusa
-		for (PrivateChatWindow window : privateChatWindowList) {
-			r = window.getReceiver();
-			s = window.getSender();
-			if (s.equals(receiver) && r.equals(sender)) {
-				window.setTextArea(sender, message);
-				flagWindow = 1;
-				if (window.getFrame().isVisible() == false)
-					window.getFrame().setVisible(true);
-			}
-		}
-
-		// Se la finestra non è mai stata creata, la crea
-		if (flagWindow == 0) {
-			PrivateChatWindow pm = new PrivateChatWindow(receiver, sender, clientConn.getPrintWriter());
-			privateChatWindowList.add(pm);
-			pm.setTextArea(sender, message);
-		}
-	}
-	
-	private void processErrorMessageResp(String answer){
-		JOptionPane.showMessageDialog(frame, answer, "Errore", JOptionPane.ERROR_MESSAGE);
-	}
-	
-	private void processInformationMessageResp(String answer){
-		JOptionPane.showMessageDialog(frame, answer, "Messaggio",JOptionPane.INFORMATION_MESSAGE);
-	}
-	
-	
-	
-	
 }

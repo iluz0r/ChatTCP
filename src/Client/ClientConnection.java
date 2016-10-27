@@ -29,7 +29,7 @@ public class ClientConnection {
 	public PrintWriter getPrintWriter() {
 		return pw;
 	}
-	
+
 	public boolean isClosed() {
 		return socket.isClosed();
 	}

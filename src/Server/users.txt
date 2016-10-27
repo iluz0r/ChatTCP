@@ -3,3 +3,5 @@ Vincenzo1:cornutone87
 iluz0r:abcde
 iluz0r1:abcde
 Angelo:aaaa
+Bob:bob
+Alice:alice
