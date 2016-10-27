@@ -88,6 +88,7 @@ public class ClientHandler implements Runnable {
 			user.setUsername(username);
 			onlineUsersList.add(user);
 			sendUsersList();
+			processMessage("MESSAGE:"+username+":è entrato");
 		}
 	}
 
@@ -99,6 +100,7 @@ public class ClientHandler implements Runnable {
 		pw.flush();
 
 		sendUsersList();
+		processMessage("MESSAGE:"+user.getUsername()+":è uscito");
 		user.closeSocket();
 	}
 
@@ -120,8 +122,9 @@ public class ClientHandler implements Runnable {
 	}
 
 	private void processMessage(String req) throws IOException {
-		String sender = req.split(":")[1];
-		String message = req.split(":")[2];
+		String sender = req.split(":",3)[1];
+		String message = req.split(":",3)[2];
+	
 		PrintWriter pw;
 
 		for (User u : onlineUsersList) {
@@ -129,12 +132,13 @@ public class ClientHandler implements Runnable {
 			pw.println("MESSAGE:" + sender + ":" + message);
 			pw.flush();
 		}
+		
 	}
 
-	private void processPrivateMessage(String req) throws IOException {
-		String sender = req.split(":")[1];
-		String receiver = req.split(":")[2];
-		String message = req.split(":")[3];
+	private void processPrivateMessage(String req) throws IOException {		
+		String sender = req.split(":",4)[1];
+		String receiver = req.split(":",4)[2];
+		String message = req.split(":",4)[3];
 		PrintWriter p;
 
 		for (User u : onlineUsersList) {
