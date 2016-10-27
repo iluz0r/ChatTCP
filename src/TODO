@@ -3,3 +3,4 @@
 3) Fix the list refresh; V
 4) Improve the graphics (login and logout messages in chat, etc) V
 5) Maybe delete the privateChatList on logout V
+6) Rivedere processPrivateResp
