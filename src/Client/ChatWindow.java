@@ -13,6 +13,8 @@ import java.awt.BorderLayout;
 import javax.swing.border.LineBorder;
 import javax.swing.text.DefaultCaret;
 
+import Server.User;
+
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -212,7 +214,11 @@ public class ChatWindow {
 						processMessageResp(answer);
 					} else if (answer.startsWith("PRIVATE:")) {
 						processPrivateResp(answer);
-					}
+					} 
+					
+					/*else if (answer.startsWith("ERASE:")) {
+						processPrivateMessageEraseResp(answer);
+					}*/
 				}
 			} catch (UnknownHostException e) {
 				e.printStackTrace();
@@ -358,29 +364,44 @@ public class ChatWindow {
 		loginButtonState = "LOGIN";
 		loginButton.setText("Login");
 		messageTextField.setEnabled(false);
-		list.setEnabled(false);
+		//list.setEnabled(false);
 		userTextField.setEnabled(true);
 		passwordTextField.setEnabled(true);
 		registerButton.setEnabled(true);
 		listModel.removeAllElements();
+		privateChatWindowList.clear();
 		clientConn.closeSocket();
 	}
 	
-	private void processListResp(String answer) throws IOException{
+	private void processListResp(String answer){
 		String[] list = answer.split(":");
-		listModel.removeAllElements();
+		listModel.removeAllElements();		
 
-		for (int i = 1; i < list.length; i++)
-			listModel.addElement(list[i]);
+		for (String user : list){
+		   if (user == list[0]) 
+			   continue;
+		   listModel.addElement(user);
+		}
+		
 	}
 	
 	
-	private void processMessageResp(String answer) throws IOException{		
+	private void processMessageResp(String answer){		
 		String sender = answer.split(":",3)[1];
 		String message = answer.split(":",3)[2];
 		chatTextArea.append(sender + ": " + message + "\n");		
 	}
 	
+	/*
+	private void processPrivateMessageEraseResp(String answer){		
+		
+		for (PrivateChatWindow u : privateChatWindowList) {
+			if (u.getReceiver().equals(answer)) {
+				privateChatWindowList.remove(u);
+			}
+		}		
+	}
+	*/
 	
 	private void processPrivateResp(String answer){
 		String sender = answer.split(":",4)[1];

@@ -101,6 +101,7 @@ public class ClientHandler implements Runnable {
 
 		sendUsersList();
 		processMessage("MESSAGE:"+user.getUsername()+":è uscito");
+		//processPrivateMessageErase(user.getUsername());
 		user.closeSocket();
 	}
 
@@ -139,20 +140,34 @@ public class ClientHandler implements Runnable {
 		String sender = req.split(":",4)[1];
 		String receiver = req.split(":",4)[2];
 		String message = req.split(":",4)[3];
-		PrintWriter p;
+		PrintWriter pw;
 
 		for (User u : onlineUsersList) {
 			if (u.getUsername().equals(receiver)) {
-				p = u.getPrintWriter();
-				p.println("PRIVATE:" + sender + ":" + receiver + ":" + message);
-				p.flush();
+				pw = u.getPrintWriter();
+				pw.println("PRIVATE:" + sender + ":" + receiver + ":" + message);
+				pw.flush();
 			}
 		}
 	}
+	
+	/*
+	private void processPrivateMessageErase(String req){		
+		String user = req;		
+		PrintWriter pw;
+
+		for (User u : onlineUsersList) {
+			pw = u.getPrintWriter();
+			pw.println("ERASE:"+user);
+			pw.flush();
+		}
+		
+	}
+	*/
 
 	private void sendUsersList() throws UnsupportedEncodingException, IOException {
 		String onlineUsers = "LIST:";
-		PrintWriter p;
+		PrintWriter pw;
 
 		for (User u : onlineUsersList) {
 			onlineUsers += u.getUsername() + ":";
@@ -161,9 +176,9 @@ public class ClientHandler implements Runnable {
 		onlineUsers = onlineUsers.substring(0, onlineUsers.length() - 1);
 
 		for (User u : onlineUsersList) {
-			p = u.getPrintWriter();
-			p.println(onlineUsers);
-			p.flush();
+			pw = u.getPrintWriter();
+			pw.println(onlineUsers);
+			pw.flush();
 		}
 	}
 
