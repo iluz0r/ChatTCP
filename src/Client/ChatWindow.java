@@ -240,8 +240,7 @@ public class ChatWindow {
 		userTextField.setEnabled(true);
 		passwordField.setEnabled(true);
 		registerButton.setEnabled(true);
-		listModel.removeAllElements();
-		list.setEnabled(false);
+		listModel.removeAllElements();		
 		privateChatWindowList.clear();
 		clientConn.closeSocket();
 	}
