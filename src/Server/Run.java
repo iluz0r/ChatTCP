@@ -10,7 +10,7 @@ public class Run {
 	public static void main(String[] args) throws IOException {
 		int port = 1330;
 		ServerSocket serverSocket = new ServerSocket(port);
-		ArrayList<User> onlineUsersList = new ArrayList<>();
+		ArrayList<UserConnection> onlineUsersList = new ArrayList<>();
 
 		while (true) {
 			System.out.println("Waiting connection....");

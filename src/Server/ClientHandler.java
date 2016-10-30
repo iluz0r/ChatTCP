@@ -13,12 +13,12 @@ import java.util.ArrayList;
 
 public class ClientHandler implements Runnable {
 
-	private User user;
-	private ArrayList<User> onlineUsersList;
+	private UserConnection userConnection;
+	private ArrayList<UserConnection> onlineUsersList;
 
-	public ClientHandler(Socket socket, ArrayList<User> onlineUsersList)
+	public ClientHandler(Socket socket, ArrayList<UserConnection> onlineUsersList)
 			throws UnsupportedEncodingException, IOException {
-		user = new User(socket);
+		userConnection = new UserConnection(socket);
 		this.onlineUsersList = onlineUsersList;
 	}
 
@@ -26,9 +26,9 @@ public class ClientHandler implements Runnable {
 	public void run() {
 		try {
 			String req;
-			BufferedReader br = user.getBufferedReader();
+			BufferedReader br = userConnection.getBufferedReader();
 
-			while (!user.isClosed() && (req = br.readLine()) != null) {
+			while (!userConnection.isClosed() && (req = br.readLine()) != null) {
 				String pathUsers = System.getProperty("user.dir") + "/src/Server/users.txt";
 
 				File f = new File(pathUsers);
@@ -80,36 +80,36 @@ public class ClientHandler implements Runnable {
 			else
 				resp = "NACK:NotExistingUser";
 		}
-		PrintWriter pw = user.getPrintWriter();
+		PrintWriter pw = userConnection.getPrintWriter();
 		pw.println(resp);
 		pw.flush();
 
 		if (resp.startsWith("ACK:")) {
-			user.setUsername(username);
-			onlineUsersList.add(user);
+			userConnection.setUsername(username);
+			onlineUsersList.add(userConnection);
 			sendUsersList();
 			processMessageReq("MESSAGE:" + "1:" + username + ":" + "si è connesso");
 		}
 	}
 
 	private void processLogoutReq(String req) throws IOException {
-		onlineUsersList.remove(user);
+		onlineUsersList.remove(userConnection);
 
-		PrintWriter pw = user.getPrintWriter();
+		PrintWriter pw = userConnection.getPrintWriter();
 		pw.println("ACK:Logout");
 		pw.flush();
 
 		sendUsersList();
-		processMessageReq("MESSAGE:" + "1:" + user.getUsername() + ":" + "si è disconnesso");
+		processMessageReq("MESSAGE:" + "1:" + userConnection.getUsername() + ":" + "si è disconnesso");
 		// processPrivateMessageErase(user.getUsername());
-		user.closeSocket();
+		userConnection.closeSocket();
 	}
 
 	private void processRegisterReq(String req, BufferedReader usersReader, BufferedWriter usersWriter)
 			throws IOException {
 		String username = req.split(":")[1];
 		String password = req.split(":")[2];
-		PrintWriter pw = user.getPrintWriter();
+		PrintWriter pw = userConnection.getPrintWriter();
 		String psw = getUserPassword(usersReader, username);
 
 		if (psw != null)
@@ -128,8 +128,8 @@ public class ClientHandler implements Runnable {
 		String message = req.split(":", 4)[3];
 
 		PrintWriter pw;
-		for (User u : onlineUsersList) {
-			pw = u.getPrintWriter();
+		for (UserConnection userConnection : onlineUsersList) {
+			pw = userConnection.getPrintWriter();
 			pw.println("MESSAGE:" + messageType + ":" + sender + ":" + message);
 			pw.flush();
 		}
@@ -141,37 +141,27 @@ public class ClientHandler implements Runnable {
 		String message = req.split(":", 4)[3];
 		
 		PrintWriter pw;
-		for (User u : onlineUsersList) {
-			if (u.getUsername().equals(receiver)) {
-				pw = u.getPrintWriter();
+		for (UserConnection userConnection : onlineUsersList) {
+			if (userConnection.getUsername().equals(receiver)) {
+				pw = userConnection.getPrintWriter();
 				pw.println("PRIVATE:" + sender + ":" + receiver + ":" + message);
 				pw.flush();
 			}
 		}
 	}
 
-	/*
-	 * private void processPrivateMessageErase(String req){ String user = req;
-	 * PrintWriter pw;
-	 * 
-	 * for (User u : onlineUsersList) { pw = u.getPrintWriter();
-	 * pw.println("ERASE:"+user); pw.flush(); }
-	 * 
-	 * }
-	 */
-
 	private void sendUsersList() throws UnsupportedEncodingException, IOException {
 		String onlineUsers = "LIST:";
 		PrintWriter pw;
 
-		for (User u : onlineUsersList) {
-			onlineUsers += u.getUsername() + ":";
+		for (UserConnection userConnection : onlineUsersList) {
+			onlineUsers += userConnection.getUsername() + ":";
 		}
 
 		onlineUsers = onlineUsers.substring(0, onlineUsers.length() - 1);
 
-		for (User u : onlineUsersList) {
-			pw = u.getPrintWriter();
+		for (UserConnection userConnection : onlineUsersList) {
+			pw = userConnection.getPrintWriter();
 			pw.println(onlineUsers);
 			pw.flush();
 		}
@@ -193,8 +183,8 @@ public class ClientHandler implements Runnable {
 	private boolean isUserOnline(String username) {
 		boolean found = false;
 
-		for (User s : onlineUsersList) 
-			if (s.getUsername().equals(username))
+		for (UserConnection userConnection : onlineUsersList) 
+			if (userConnection.getUsername().equals(username))
 				found = true;
 		
 		return found;

@@ -211,8 +211,6 @@ public class ChatWindow {
 						processMessageResp(resp);
 					else if (resp.startsWith("PRIVATE:"))
 						processPrivateResp(resp);
-					// else if (resp.startsWith("ERASE:"))
-					// processPrivateMessageEraseResp(resp);
 				}
 			} catch (UnknownHostException e) {
 				e.printStackTrace();
@@ -288,12 +286,6 @@ public class ChatWindow {
 	private void showMessageResp(String resp, int messageType) {
 		JOptionPane.showMessageDialog(frame, resp, "Messaggio", messageType);
 	}
-
-	// private void processPrivateMessageEraseResp(String resp) {
-	// for (PrivateChatWindow u : privateChatWindowList)
-	// if(u.getReceiver().equals(resp))
-	// privateChatWindowList.remove(u);
-	// }
 
 	private class LoginButtonListener implements ActionListener {
 

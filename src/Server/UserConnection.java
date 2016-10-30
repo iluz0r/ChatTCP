@@ -8,14 +8,14 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.Socket;
 
-public class User {
+public class UserConnection {
 
 	private String username;
 	private Socket socket;
 	private BufferedReader br;
 	private PrintWriter pw;
 
-	public User(Socket socket) throws UnsupportedEncodingException, IOException {
+	public UserConnection(Socket socket) throws UnsupportedEncodingException, IOException {
 		this.socket = socket;
 		br = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
 		pw = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
