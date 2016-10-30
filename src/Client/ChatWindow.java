@@ -42,7 +42,6 @@ public class ChatWindow {
 	private String loginButtonState;
 	private JButton registerButton;
 	private JList<String> list;
-	private DefaultListModel<String> listModel;
 
 	private ClientConnection clientConn;
 	private Thread serverListener;
@@ -153,8 +152,6 @@ public class ChatWindow {
 		messageTextField.addKeyListener(new SendTextKeyListener());
 		textPanel.add(messageTextField);
 
-		listModel = new DefaultListModel<String>();
-
 		JPanel listPanel = new JPanel();
 		listPanel.setBorder(new LineBorder(Color.LIGHT_GRAY));
 		listPanel.setBounds(368, 70, 123, 185);
@@ -163,11 +160,10 @@ public class ChatWindow {
 
 		JScrollPane scrollPane = new JScrollPane();
 		listPanel.add(scrollPane);
-		list = new JList<String>(listModel);
+		DefaultListModel<String> listModel = new DefaultListModel<>();
+		list = new JList<>(listModel);
 		list.setEnabled(false);
 		list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		list.setSelectedIndex(0);
-		list.setVisibleRowCount(5);
 		list.addMouseListener(new ListDoubleClickListener());
 		scrollPane.setViewportView(list);
 
@@ -238,17 +234,27 @@ public class ChatWindow {
 		userTextField.setEnabled(true);
 		passwordField.setEnabled(true);
 		registerButton.setEnabled(true);
-		listModel.removeAllElements();		
+		((DefaultListModel<String>)list.getModel()).clear();		
 		privateChatWindowList.clear();
 		clientConn.closeSocket();
 	}
 
 	private void processListResp(String resp) {
-		String[] list = resp.split(":");
+		String[] users = resp.split(":");
+		DefaultListModel<String> m = (DefaultListModel<String>)list.getModel();
 
-		listModel.removeAllElements();
-		for (int i = 1; i < list.length; i++)
-			listModel.addElement(list[i]);
+		m.clear();
+		/*try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}*/
+		for (int i = 1; i < users.length; i++) {
+			System.out.print(users[i]);
+			m.addElement(users[i]);
+			System.out.println(" " + m.size());
+		}
 	}
 
 	private void processMessageResp(String resp) {
@@ -369,11 +375,11 @@ public class ChatWindow {
 
 		@Override
 		public void mouseClicked(MouseEvent evt) {
-			JList<?> list = (JList<?>) evt.getSource();
+			JList<?> l = (JList<?>) evt.getSource();
 
-			if (list.isEnabled() && evt.getClickCount() == 2) {
-				int index = list.locationToIndex(evt.getPoint());
-				String receiver = listModel.getElementAt(index);
+			if (l.isEnabled() && evt.getClickCount() == 2) {
+				int index = l.locationToIndex(evt.getPoint());
+				String receiver = (String) ((DefaultListModel<String>)l.getModel()).getElementAt(index);
 				String sender = userTextField.getText();
 				boolean found = false;
 

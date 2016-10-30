@@ -101,7 +101,6 @@ public class ClientHandler implements Runnable {
 
 		sendUsersList();
 		processMessageReq("MESSAGE:" + "1:" + userConnection.getUsername() + ":" + "si è disconnesso");
-		// processPrivateMessageErase(user.getUsername());
 		userConnection.closeSocket();
 	}
 
