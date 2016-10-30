@@ -184,8 +184,6 @@ public class ChatWindow {
 				BufferedReader br = clientConn.getBufferedReader();
 
 				while (!clientConn.isClosed() && (resp = br.readLine()) != null) {
-					System.out.println("Il server listener ha ricevuto " + resp);
-
 					if (resp.startsWith("ACK:Login"))
 						processLoginResp();
 					else if (resp.equals("NACK:WrongPassword"))
@@ -243,11 +241,8 @@ public class ChatWindow {
 			String[] users = resp.split(":");
 			DefaultListModel<String> m = new DefaultListModel<>();
 
-			for (int i = 1; i < users.length; i++) {
-				System.out.print(users[i]);
+			for (int i = 1; i < users.length; i++)
 				m.addElement(users[i]);
-				System.out.println(" " + m.size());
-			}
 			list.setModel(m);
 		}
 

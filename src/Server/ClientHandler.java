@@ -30,7 +30,6 @@ public class ClientHandler implements Runnable {
 
 			while (!userConnection.isClosed() && (req = br.readLine()) != null) {
 				String pathUsers = System.getProperty("user.dir") + "\\users.txt";
-				System.out.println(pathUsers);
 
 				File f = new File(pathUsers);
 				f.createNewFile();
