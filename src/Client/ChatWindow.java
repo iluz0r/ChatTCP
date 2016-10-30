@@ -213,77 +213,78 @@ public class ChatWindow {
 				e.printStackTrace();
 			}
 		}
-
-	}
-
-	private void processLoginResp() {
-		loginButtonState = "LOGOUT";
-		loginButton.setText("Logout");
-		messageTextField.setEnabled(true);
-		list.setEnabled(true);
-		userTextField.setEnabled(false);
-		passwordField.setEnabled(false);
-		registerButton.setEnabled(false);
-	}
-
-	private void processLogoutResp() throws IOException {
-		loginButtonState = "LOGIN";
-		loginButton.setText("Login");
-		messageTextField.setEnabled(false);
-		userTextField.setEnabled(true);
-		passwordField.setEnabled(true);
-		registerButton.setEnabled(true);
-		list.setModel(new DefaultListModel<String>());	
-		privateChatWindowList.clear();
-		clientConn.closeSocket();
-	}
-
-	private void processListResp(String resp) {
-		String[] users = resp.split(":");
-		DefaultListModel<String> m = new DefaultListModel<>();
 		
-		for (int i = 1; i < users.length; i++) {
-			System.out.print(users[i]);
-			m.addElement(users[i]);
-			System.out.println(" " + m.size());
+		private void processLoginResp() {
+			loginButtonState = "LOGOUT";
+			loginButton.setText("Logout");
+			messageTextField.setEnabled(true);
+			list.setEnabled(true);
+			userTextField.setEnabled(false);
+			passwordField.setEnabled(false);
+			registerButton.setEnabled(false);
 		}
-		list.setModel(m);
-	}
 
-	private void processMessageResp(String resp) {
-		int messageType = Integer.valueOf(resp.split(":", 4)[1]);
-		String sender = resp.split(":", 4)[2];
-		String message = resp.split(":", 4)[3];
+		private void processLogoutResp() throws IOException {
+			loginButtonState = "LOGIN";
+			loginButton.setText("Login");
+			messageTextField.setEnabled(false);
+			userTextField.setEnabled(true);
+			passwordField.setEnabled(true);
+			registerButton.setEnabled(true);
+			list.setModel(new DefaultListModel<String>());	
+			list.setEnabled(false);
+			privateChatWindowList.clear();
+			clientConn.closeSocket();
+		}
 
-		if (messageType == 0)
-			chatTextArea.append(sender + ": " + message + "\n");
-		else
-			chatTextArea.append(sender + " " + message + "\n");
-	}
+		private void processListResp(String resp) {
+			String[] users = resp.split(":");
+			DefaultListModel<String> m = new DefaultListModel<>();
+			
+			for (int i = 1; i < users.length; i++) {
+				System.out.print(users[i]);
+				m.addElement(users[i]);
+				System.out.println(" " + m.size());
+			}
+			list.setModel(m);
+		}
 
-	private void processPrivateResp(String resp) {
-		String sender = resp.split(":", 4)[1];
-		String receiver = resp.split(":", 4)[2];
-		String message = resp.split(":", 4)[3];
-		boolean found = false;
+		private void processMessageResp(String resp) {
+			int messageType = Integer.valueOf(resp.split(":", 4)[1]);
+			String sender = resp.split(":", 4)[2];
+			String message = resp.split(":", 4)[3];
 
-		for (PrivateChatWindow window : privateChatWindowList) {
-			if (window.getSender().equals(receiver) && window.getReceiver().equals(sender)) {
+			if (messageType == 0)
+				chatTextArea.append(sender + ": " + message + "\n");
+			else
+				chatTextArea.append(sender + " " + message + "\n");
+		}
+
+		private void processPrivateResp(String resp) {
+			String sender = resp.split(":", 4)[1];
+			String receiver = resp.split(":", 4)[2];
+			String message = resp.split(":", 4)[3];
+			boolean found = false;
+
+			for (PrivateChatWindow window : privateChatWindowList) {
+				if (window.getSender().equals(receiver) && window.getReceiver().equals(sender)) {
+					window.setTextArea(sender, message);
+					if (window.getFrame().isVisible() == false)
+						window.getFrame().setVisible(true);
+					found = true;
+				}
+			}
+			if (!found) {
+				PrivateChatWindow window = new PrivateChatWindow(receiver, sender, clientConn.getPrintWriter());
+				privateChatWindowList.add(window);
 				window.setTextArea(sender, message);
-				if (window.getFrame().isVisible() == false)
-					window.getFrame().setVisible(true);
-				found = true;
 			}
 		}
-		if (!found) {
-			PrivateChatWindow window = new PrivateChatWindow(receiver, sender, clientConn.getPrintWriter());
-			privateChatWindowList.add(window);
-			window.setTextArea(sender, message);
-		}
-	}
 
-	private void showMessageResp(String resp, int messageType) {
-		JOptionPane.showMessageDialog(frame, resp, "Messaggio", messageType);
+		private void showMessageResp(String resp, int messageType) {
+			JOptionPane.showMessageDialog(frame, resp, "Messaggio", messageType);
+		}
+
 	}
 
 	private class LoginButtonListener implements ActionListener {
