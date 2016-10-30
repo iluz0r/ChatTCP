@@ -55,7 +55,7 @@ public class PrivateChatWindow {
 		chatPanel.add(chatScrollPane);
 
 		JPanel textPanel = new JPanel();
-		textPanel.setBounds(0, 210, 427, 24);
+		textPanel.setBounds(0, 210, 427, 32);
 		frame.getContentPane().add(textPanel);
 		textPanel.setLayout(new BorderLayout(0, 0));
 
