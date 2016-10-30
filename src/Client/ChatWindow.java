@@ -42,6 +42,7 @@ public class ChatWindow {
 	private String loginButtonState;
 	private JButton registerButton;
 	private JList<String> list;
+	DefaultListModel<String> listModel;
 
 	private ClientConnection clientConn;
 	private Thread serverListener;
@@ -160,7 +161,7 @@ public class ChatWindow {
 
 		JScrollPane scrollPane = new JScrollPane();
 		listPanel.add(scrollPane);
-		DefaultListModel<String> listModel = new DefaultListModel<>();
+		listModel = new DefaultListModel<>();
 		list = new JList<>(listModel);
 		list.setEnabled(false);
 		list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -234,16 +235,15 @@ public class ChatWindow {
 		userTextField.setEnabled(true);
 		passwordField.setEnabled(true);
 		registerButton.setEnabled(true);
-		((DefaultListModel<String>)list.getModel()).clear();		
+		listModel.clear();		
 		privateChatWindowList.clear();
 		clientConn.closeSocket();
 	}
 
 	private void processListResp(String resp) {
 		String[] users = resp.split(":");
-		DefaultListModel<String> m = (DefaultListModel<String>)list.getModel();
 
-		m.clear();
+		listModel.clear();
 		/*try {
 			Thread.sleep(1000);
 		} catch (InterruptedException e) {
@@ -252,8 +252,8 @@ public class ChatWindow {
 		}*/
 		for (int i = 1; i < users.length; i++) {
 			System.out.print(users[i]);
-			m.addElement(users[i]);
-			System.out.println(" " + m.size());
+			listModel.addElement(users[i]);
+			System.out.println(" " + listModel.size());
 		}
 	}
 
@@ -379,7 +379,7 @@ public class ChatWindow {
 
 			if (l.isEnabled() && evt.getClickCount() == 2) {
 				int index = l.locationToIndex(evt.getPoint());
-				String receiver = (String) ((DefaultListModel<String>)l.getModel()).getElementAt(index);
+				String receiver = (String) listModel.getElementAt(index);
 				String sender = userTextField.getText();
 				boolean found = false;
 
