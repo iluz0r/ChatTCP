@@ -29,7 +29,8 @@ public class ClientHandler implements Runnable {
 			BufferedReader br = userConnection.getBufferedReader();
 
 			while (!userConnection.isClosed() && (req = br.readLine()) != null) {
-				String pathUsers = System.getProperty("user.dir") + "/src/Server/users.txt";
+				String pathUsers = System.getProperty("user.dir") + "\\users.txt";
+				System.out.println(pathUsers);
 
 				File f = new File(pathUsers);
 				f.createNewFile();
@@ -52,7 +53,6 @@ public class ClientHandler implements Runnable {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
 	}
 
 	private void processLoginReq(String req, BufferedReader usersReader) throws IOException {
@@ -138,7 +138,7 @@ public class ClientHandler implements Runnable {
 		String sender = req.split(":", 4)[1];
 		String receiver = req.split(":", 4)[2];
 		String message = req.split(":", 4)[3];
-		
+
 		PrintWriter pw;
 		for (UserConnection userConnection : onlineUsersList) {
 			if (userConnection.getUsername().equals(receiver)) {
@@ -182,10 +182,10 @@ public class ClientHandler implements Runnable {
 	private boolean isUserOnline(String username) {
 		boolean found = false;
 
-		for (UserConnection userConnection : onlineUsersList) 
+		for (UserConnection userConnection : onlineUsersList)
 			if (userConnection.getUsername().equals(username))
 				found = true;
-		
+
 		return found;
 	}
 

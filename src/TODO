@@ -1,9 +1,3 @@
 1) Pulizia codice (PRIORITY: LOW)
-2) Fixare la list refresh, forse correlato alla 6) (PRIORITY: HIGH)
 3) Migliorare la grafica (PRIORITY: LOW)
-4) Chiudere chat private (finestre) al logout (altrimenti quando ti riconnetti e provi a inviare un messaggio da quella finestra privata non lo manda) (PRIORITY: HIGH)
-5) Rivedere ServerListener e valutare rimozione/modifca dei messaggi di ACK e NACK (PRIORITY: LOW)
-6) Valutare inserimento thread secondario sul client/server (PRIORITY: HIGH)
-7) Valutare inserimento di un NACK su PRIVATE quando l'utente receiver è disconnesso (PRIORITY: HIGH)
-8) Valutare inserimento controllo dei caratteri speciali (ad esempio ':') su nick al login/register (PRIORITY: HIGH)
-9) Valutare path nel ClientHandler.java per users.txt (potrebbe causare eccezione quando runniamo il server su un'altra macchina o, in generale, in un'altra locazione in cui non c'è la cartella src) (PRIORITY: MEDIUM)
+4) Cambiare server address to localhost

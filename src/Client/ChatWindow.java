@@ -213,7 +213,7 @@ public class ChatWindow {
 				e.printStackTrace();
 			}
 		}
-		
+
 		private void processLoginResp() {
 			loginButtonState = "LOGOUT";
 			loginButton.setText("Logout");
@@ -225,22 +225,24 @@ public class ChatWindow {
 		}
 
 		private void processLogoutResp() throws IOException {
+			clientConn.closeSocket();
 			loginButtonState = "LOGIN";
 			loginButton.setText("Login");
 			messageTextField.setEnabled(false);
 			userTextField.setEnabled(true);
 			passwordField.setEnabled(true);
 			registerButton.setEnabled(true);
-			list.setModel(new DefaultListModel<String>());	
+			list.setModel(new DefaultListModel<String>());
 			list.setEnabled(false);
+			for (PrivateChatWindow w : privateChatWindowList)
+				w.getFrame().dispose();
 			privateChatWindowList.clear();
-			clientConn.closeSocket();
 		}
 
 		private void processListResp(String resp) {
 			String[] users = resp.split(":");
 			DefaultListModel<String> m = new DefaultListModel<>();
-			
+
 			for (int i = 1; i < users.length; i++) {
 				System.out.print(users[i]);
 				m.addElement(users[i]);
@@ -293,7 +295,7 @@ public class ChatWindow {
 		public void actionPerformed(ActionEvent e) {
 			String username = userTextField.getText();
 
-			if (!username.equals("")) {
+			if (!username.equals("") && !username.contains(":")) {
 				String loginReq = loginButtonState + ":" + username + ":" + String.valueOf(passwordField.getPassword());
 
 				if (clientConn == null || clientConn.isClosed()) {
@@ -312,7 +314,8 @@ public class ChatWindow {
 					pw.flush();
 				}
 			} else
-				JOptionPane.showMessageDialog(frame, "Username mancante", "Messaggio", JOptionPane.INFORMATION_MESSAGE);
+				JOptionPane.showMessageDialog(frame, "Username non valido", "Messaggio",
+						JOptionPane.INFORMATION_MESSAGE);
 		}
 
 	}
@@ -324,7 +327,7 @@ public class ChatWindow {
 			String username = userTextField.getText();
 			String password = String.valueOf(passwordField.getPassword());
 
-			if (!username.equals("") && !password.equals("")) {
+			if (!username.equals("") && !password.equals("") && !username.contains(":") && !password.contains(":")) {
 				String registerReq = "REGISTER:" + username + ":" + password;
 
 				if (clientConn == null || clientConn.isClosed()) {
@@ -343,7 +346,7 @@ public class ChatWindow {
 					pw.flush();
 				}
 			} else
-				JOptionPane.showMessageDialog(frame, "Username/Password mancante/i", "Messaggio",
+				JOptionPane.showMessageDialog(frame, "Username e/o Password non validi", "Messaggio",
 						JOptionPane.INFORMATION_MESSAGE);
 		}
 
@@ -373,7 +376,7 @@ public class ChatWindow {
 
 			if (l.isEnabled() && evt.getClickCount() == 2) {
 				int index = l.locationToIndex(evt.getPoint());
-				DefaultListModel<String> listModel = (DefaultListModel<String>)list.getModel();
+				DefaultListModel<String> listModel = (DefaultListModel<String>) list.getModel();
 				String receiver = (String) listModel.getElementAt(index);
 				String sender = userTextField.getText();
 				boolean found = false;
